@@ -1,26 +1,248 @@
 @import "tailwindcss";
 
+/*
+ * Theme switching.
+ *
+ * `dark:` utilities key off a `.dark` class on <html> instead of the OS media
+ * query, so the header toggle can override the system preference. The
+ * `color-scheme` declaration keeps native UI (scrollbars, form controls,
+ * default 404 chrome) in sync with the chosen theme. Ported from the
+ * reference project's globals.css.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Palette: "Turquoise & Saffron" (فیروزه‌ای و طلایی)
+ * A deep midnight-navy base with Persian turquoise as the primary and saffron
+ * gold as the accent — reused as-is so ITSMIFY reads as part of the same
+ * design family, with every value changeable from this one file.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+   color-scheme: light;
+
+   --background: #f7fafc;
+   --foreground: #0f172a;
+
+   /* Surfaces — tuned so cards actually separate from the page in light mode. */
+   --surface: #ffffff;
+   --surface-muted: #f1f5f9;
+   --border-subtle: #e2e8f0;
+   --border-strong: #cbd5e1;
+
+   /* Brand — Persian turquoise */
+   --brand-50: #f0fdfa;
+   --brand-100: #ccfbf1;
+   --brand-200: #99f6e4;
+   --brand-300: #5eead4;
+   --brand-400: #2dd4bf;
+   --brand-500: #14b8a6;
+   --brand-600: #0d9488;
+   --brand-700: #0f766e;
+   --brand-800: #115e59;
+   --brand-900: #134e4a;
+
+   /* Accent — saffron gold */
+   --accent-50: #fffbeb;
+   --accent-100: #fef3c7;
+   --accent-200: #fde68a;
+   --accent-300: #fcd34d;
+   --accent-400: #fbbf24;
+   --accent-500: #f59e0b;
+   --accent-600: #d97706;
+   --accent-700: #b45309;
+   --accent-800: #92400e;
+   --accent-900: #78350f;
+
+   /* Midnight navy surface ramp */
+   --navy-50: #f8fafc;
+   --navy-100: #f1f5f9;
+   --navy-200: #e2e8f0;
+   --navy-300: #cbd5e1;
+   --navy-400: #94a3b8;
+   --navy-500: #64748b;
+   --navy-600: #475569;
+   --navy-700: #334155;
+   --navy-800: #1e293b;
+   --navy-900: #111c33;
+   --navy-950: #0b1220;
+}
+
+/* Applied by ThemeProvider once the user (or the OS) resolves to dark. */
+.dark {
+   color-scheme: dark;
+
+   --background: #0b1220;
+   --foreground: #e2e8f0;
+
+   --surface: #111c33;
+   --surface-muted: #1e293b;
+   --border-subtle: #1e293b;
+   --border-strong: #334155;
+}
+
+/*
+ * Next.js renders the built-in not-found UI outside our React tree, so it does
+ * not pick up the `.dark` class on its own. These higher-specificity rules keep
+ * the default 404 chrome in the chosen theme (per the Next.js docs for
+ * `not-found`).
+ */
+html.dark body {
+   background-color: #0b1220;
+   color: #e2e8f0;
+}
+
+html:not(.dark) body {
+   background-color: #f7fafc;
+   color: #0f172a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+   --color-surface: var(--surface);
+   --color-surface-muted: var(--surface-muted);
+   --color-border-subtle: var(--border-subtle);
+   --color-border-strong: var(--border-strong);
+   --font-sans: var(--font-geist-sans);
+   --font-mono: var(--font-geist-mono);
+
+   --color-brand-50: var(--brand-50);
+   --color-brand-100: var(--brand-100);
+   --color-brand-200: var(--brand-200);
+   --color-brand-300: var(--brand-300);
+   --color-brand-400: var(--brand-400);
+   --color-brand-500: var(--brand-500);
+   --color-brand-600: var(--brand-600);
+   --color-brand-700: var(--brand-700);
+   --color-brand-800: var(--brand-800);
+   --color-brand-900: var(--brand-900);
+
+   --color-accent-50: var(--accent-50);
+   --color-accent-100: var(--accent-100);
+   --color-accent-200: var(--accent-200);
+   --color-accent-300: var(--accent-300);
+   --color-accent-400: var(--accent-400);
+   --color-accent-500: var(--accent-500);
+   --color-accent-600: var(--accent-600);
+   --color-accent-700: var(--accent-700);
+   --color-accent-800: var(--accent-800);
+   --color-accent-900: var(--accent-900);
+
+   --color-navy-50: var(--navy-50);
+   --color-navy-100: var(--navy-100);
+   --color-navy-200: var(--navy-200);
+   --color-navy-300: var(--navy-300);
+   --color-navy-400: var(--navy-400);
+   --color-navy-500: var(--navy-500);
+   --color-navy-600: var(--navy-600);
+   --color-navy-700: var(--navy-700);
+   --color-navy-800: var(--navy-800);
+   --color-navy-900: var(--navy-900);
+   --color-navy-950: var(--navy-950);
+
+   --animate-fade-in-up: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+   --animate-float: float 6s ease-in-out infinite;
+   --animate-glow-pulse: glow-pulse 5s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes float {
+   0%,
+   100% {
+      transform: translateY(0px);
+   }
+   50% {
+      transform: translateY(-12px);
+   }
+}
+
+@keyframes glow-pulse {
+   0%,
+   100% {
+      opacity: 0.4;
+      transform: scale(1);
+   }
+   50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+   }
+}
+
+@keyframes fade-in-up {
+   from {
+      opacity: 0;
+      transform: translateY(16px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+/*
+ * `next/font` injects the real family on <html> via a generated class named
+ * `--font-vazirmatn`. Declaring it as a theme variable would be circular, so
+ * the utility points straight at the injected variable (same approach as the
+ * reference globals.css).
+ */
+@utility font-vazirmatn {
+   font-family: var(--font-vazirmatn), Arial, Helvetica, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+   background: var(--background);
+   color: var(--foreground);
+   font-family: var(--font-vazirmatn), Arial, Helvetica, sans-serif;
+   -webkit-font-smoothing: antialiased;
+}
+
+/* Slim, branded scrollbars used by admin lists. */
+.scrollbar-polished {
+   scrollbar-width: thin;
+   scrollbar-color: var(--brand-900) transparent;
+}
+
+.scrollbar-polished::-webkit-scrollbar {
+   width: 6px;
+   height: 6px;
+}
+
+.scrollbar-polished::-webkit-scrollbar-track {
+   background: transparent;
+   border-radius: 9999px;
+}
+
+.scrollbar-polished::-webkit-scrollbar-thumb {
+   border: 2px solid transparent;
+   border-radius: 9999px;
+   background: var(--brand-500);
+   background-clip: padding-box;
+}
+
+.scrollbar-polished::-webkit-scrollbar-thumb:hover {
+   background: var(--brand-600);
+   background-clip: padding-box;
+}
+
+.dark .scrollbar-polished {
+   scrollbar-color: var(--brand-800) transparent;
+}
+
+.dark .scrollbar-polished::-webkit-scrollbar-thumb {
+   background: var(--brand-400);
+   background-clip: padding-box;
+}
+
+.dark .scrollbar-polished::-webkit-scrollbar-thumb:hover {
+   background: var(--brand-300);
+   background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+   *,
+   *::before,
+   *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+   }
 }

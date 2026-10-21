@@ -1,0 +1,170 @@
+/**
+ * ITSMIFY — authentication & identity schema.
+ * Accounts are provisioned by administrators. The browser authenticates with
+ * a username + password; the phone number is optional profile data that the
+ * owner proves through an SMS challenge. Public self-registration and the
+ * registration approval pipeline no longer exist.
+ */
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The four access levels an account can hold. Only administrators may create
+/// accounts or change roles.
+enum Role {
+  EMPLOYEE
+  IT_SPECIALIST
+  IT_MANAGER
+  SYS_ADMIN
+}
+
+/// The lifecycle of the account itself. Suspended accounts keep their data and
+/// audit history but cannot sign in; sessions are revoked when they are
+/// suspended.
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/// The only remaining verification purpose: proving ownership of a new phone
+/// number from the signed-in profile screen.
+enum OtpPurpose {
+  PHONE_CHANGE
+}
+
+/// Administrative audit trail. Secrets (password hashes, OTP codes) are never
+/// written here.
+enum AuditAction {
+  CREATED
+  UPDATED
+  ROLE_CHANGED
+  STATUS_CHANGED
+  PASSWORD_CHANGED
+  PASSWORD_RESET
+  DELETED
+  PHONE_VERIFIED
+}
+
+model User {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  firstName String
+  lastName  String
+
+  /// Lowercase ASCII handle, unique across the system. Normalized before the
+  /// row is written — see lib/auth/validation.ts.
+  username String @unique
+
+  /// Canonical Iranian mobile form: 09 followed by 9 digits. Optional profile
+  /// information, never a login credential. Unique when present so two
+  /// accounts cannot claim the same number.
+  phone String? @unique
+
+  /// One-way scrypt hash. Null only for accounts created before the password
+  /// migration that have not been given a password yet; such accounts cannot
+  /// sign in until an administrator resets the password.
+  passwordHash String?
+
+  /// True for administrator-created accounts and password resets. The app
+  /// forces the owner through /change-password before anything else.
+  mustChangePassword Boolean   @default(true)
+  passwordChangedAt  DateTime?
+  lastLoginAt        DateTime?
+
+  role   Role          @default(EMPLOYEE)
+  status AccountStatus @default(ACTIVE)
+
+  /// Set the moment a PHONE_CHANGE challenge is consumed.
+  phoneVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Soft delete: keeps the row (and its audit trail) while barring access.
+  deletedAt   DateTime?
+  deletedById String?   @db.Uuid
+
+  deletedBy User?  @relation("UserDeletions", fields: [deletedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  deletions User[] @relation("UserDeletions")
+
+  sessions      Session[]
+  verifications PhoneVerification[]
+
+  auditEvents  AccountAudit[] @relation("AuditTarget")
+  auditActions AccountAudit[] @relation("AuditActor")
+
+  @@index([status, createdAt])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+/// One browser session. The cookie carries a random opaque token; only its
+/// SHA-256 hash is stored, so a database leak cannot mint sessions. Revoked
+/// rows keep their timestamps for the audit trail and are swept lazily.
+model Session {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  createdAt DateTime  @default(now())
+  /// Fixed 14-day lifetime, checked on every read and against `now()`.
+  expiresAt DateTime
+  revokedAt DateTime?
+  /// Request context captured at creation, for the admin's audit trail only.
+  userAgent String?
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("sessions")
+}
+
+/// Short-lived OTP challenges, issued and consumed exclusively through
+/// lib/auth/otp.ts. Codes are stored as SHA-256 hashes — never plaintext.
+model PhoneVerification {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  phone     String
+  codeHash  String
+  purpose   OtpPurpose
+  userId    String?    @db.Uuid
+  createdAt DateTime   @default(now())
+  expiresAt DateTime
+  attempts  Int        @default(0)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phone, purpose])
+  @@index([expiresAt])
+  @@map("phone_verification")
+}
+
+/// Administrative mutations, one row per action. The actor and target are
+/// nullable so deleting an account never destroys its own history.
+model AccountAudit {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  actorId      String?     @db.Uuid
+  targetUserId String?     @db.Uuid
+  action       AuditAction
+  /// Structured, secret-free detail for the action (changed fields, old/new
+  /// role, and so on).
+  detail       Json?
+
+  createdAt DateTime @default(now())
+
+  actor  User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  target User? @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([targetUserId, createdAt])
+  @@index([createdAt])
+  @@map("account_audit")
+}
