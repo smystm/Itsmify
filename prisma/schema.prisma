@@ -51,6 +51,64 @@ enum AuditAction {
   PHONE_VERIFIED
 }
 
+/// What kind of thing an asset is, at the top level used by filters and
+/// dashboard distribution cards.
+enum AssetCategory {
+  HARDWARE
+  SOFTWARE
+  NETWORK
+}
+
+/// The concrete asset shape. The category is derived from this value and
+/// validated server-side, so the two fields cannot drift apart.
+enum AssetType {
+  COMPUTER
+  MONITOR
+  PRINTER
+  SCANNER
+  COPIER
+  PROJECTOR
+  KEYBOARD
+  MOUSE
+  SPEAKER
+  OTHER_HARDWARE
+  SOFTWARE
+  NETWORK_DEVICE
+}
+
+/// Operational life cycle. Assignment is tracked separately in
+/// AssetAssignment, so a stored asset can be unassigned without changing its
+/// physical condition.
+enum AssetStatus {
+  ACTIVE
+  IN_STORAGE
+  IN_REPAIR
+  RETIRED
+  LOST
+}
+
+enum EmploymentType {
+  OFFICIAL
+  CONTRACTUAL
+  TEMPORARY
+  OTHER
+}
+
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  INSPECTION
+  INSTALLATION
+  OTHER
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
@@ -98,6 +156,17 @@ model User {
 
   auditEvents  AccountAudit[] @relation("AuditTarget")
   auditActions AccountAudit[] @relation("AuditActor")
+
+  /// The employee/organizational extension. Names, username, phone and
+  /// credentials stay here on the account row to avoid duplicating identity
+  /// data across two tables.
+  employeeProfile EmployeeProfile?
+
+  assetsCreated Asset[] @relation("AssetCreator")
+  assetsDeleted Asset[] @relation("AssetDeleter")
+
+  assignmentsMade      AssetAssignment[]  @relation("AssignmentActor")
+  maintenancePerformed AssetMaintenance[] @relation("MaintenancePerformer")
 
   @@index([status, createdAt])
   @@index([role])
@@ -167,4 +236,387 @@ model AccountAudit {
   @@index([targetUserId, createdAt])
   @@index([createdAt])
   @@map("account_audit")
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Organizational directory
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+/// A department or room-level organizational unit. The source Excel stores
+/// free text in the `اتاق` column; the admin forms resolve that text to this
+/// table so filters and reports do not depend on duplicated strings.
+model OrgUnit {
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String  @unique
+  code     String? @unique
+  parentId String? @db.Uuid
+
+  parent   OrgUnit?  @relation("OrgUnitHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children OrgUnit[] @relation("OrgUnitHierarchy")
+
+  employees EmployeeProfile[]
+  assets    Asset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@map("org_units")
+}
+
+/// A physical room. `floor` and `roomNumber` are strings because the source
+/// mixes `اول` and `1`; normalizing them to an enum would lose source data
+/// before the import has been reconciled.
+model Location {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  floor      String
+  roomNumber String
+  building   String?
+
+  employees EmployeeProfile[]
+  assets    Asset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([floor, roomNumber])
+  @@index([floor])
+  @@map("locations")
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Employee profile
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+/// One row per account. Identity fields remain on User; this table carries the
+/// HR/organizational data that is not part of authentication.
+model EmployeeProfile {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @unique @db.Uuid
+
+  personnelCode String? @unique
+  nationalId    String? @unique
+  jobTitle      String?
+
+  orgUnitId  String? @db.Uuid
+  locationId String? @db.Uuid
+
+  employmentType EmploymentType?
+  hireDate       DateTime?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgUnit  OrgUnit?  @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  assignments AssetAssignment[]
+  operations  AssetOperation[]
+  inspections AssetInspection[]
+
+  @@index([orgUnitId])
+  @@index([locationId])
+  @@map("employee_profiles")
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Assets
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+model Asset {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// Human-readable inventory code. The database sequence makes generation
+  /// concurrency-safe; callers may still provide an explicit code.
+  assetCode String @unique @default(dbgenerated("'AST-' || lpad(nextval('asset_code_seq')::text, 5, '0')"))
+
+  name         String
+  category     AssetCategory
+  type         AssetType
+  brand        String?
+  model        String?
+  serialNumber String?
+  status       AssetStatus   @default(ACTIVE)
+
+  orgUnitId  String? @db.Uuid
+  locationId String? @db.Uuid
+
+  /// Peripherals and installed software can point at the computer they belong
+  /// to. This keeps one-employee-many-assets while preserving the relationship
+  /// between a workstation and its monitor/keyboard/printer.
+  parentAssetId String? @db.Uuid
+
+  notes String?
+
+  createdById String?   @db.Uuid
+  deletedById String?   @db.Uuid
+  deletedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgUnit     OrgUnit?  @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+  location    Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  parentAsset Asset?    @relation("AssetComponents", fields: [parentAssetId], references: [id], onDelete: SetNull)
+  components  Asset[]   @relation("AssetComponents")
+
+  createdBy User? @relation("AssetCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  deletedBy User? @relation("AssetDeleter", fields: [deletedById], references: [id], onDelete: SetNull)
+
+  computerDetail   ComputerDetail?
+  monitorDetail    MonitorDetail?
+  peripheralDetail PeripheralDetail?
+  networkDetail    NetworkDetail?
+  softwareDetail   SoftwareDetail?
+
+  assignments        AssetAssignment[]
+  maintenanceRecords AssetMaintenance[]
+  operations         AssetOperation[]
+  inspections        AssetInspection[]
+
+  @@index([category, status])
+  @@index([type])
+  @@index([serialNumber])
+  @@index([orgUnitId])
+  @@index([locationId])
+  @@index([parentAssetId])
+  @@index([deletedAt])
+  @@map("assets")
+}
+
+model ComputerDetail {
+  assetId String @id @db.Uuid
+
+  systemType       String?
+  motherboardBrand String?
+  motherboardModel String?
+
+  cpuTier  String?
+  cpuModel String?
+
+  ramAmountGb Int?
+  ramType     String?
+
+  storageInfo String?
+
+  gpuType     String?
+  gpuBrand    String?
+  gpuModel    String?
+  gpuMemoryMb Int?
+
+  caseBrand String?
+  caseModel String?
+  psuBrand  String?
+  psuModel  String?
+
+  hasDvdWriter       Boolean?
+  hasSeparateSpeaker Boolean?
+  speakerType        String?
+  monitorInfo        String?
+
+  osName        String?
+  osEdition     String?
+  osVersion     String?
+  osInstalledOn DateTime?
+  osBuild       String?
+  officeVersion String?
+
+  systemUsername     String?
+  automationUsername String?
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("computer_details")
+}
+
+model MonitorDetail {
+  assetId String @id @db.Uuid
+
+  sizeInches Decimal? @db.Decimal(4, 1)
+  panelType  String?
+  resolution String?
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("monitor_details")
+}
+
+model PeripheralDetail {
+  assetId String @id @db.Uuid
+
+  connectionType String?
+  printerType    String?
+  cartridgeModel String?
+  speakerType    String?
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("peripheral_details")
+}
+
+model NetworkDetail {
+  assetId String @id @db.Uuid
+
+  ipAddress   String?
+  netboxTitle String?
+  hostname    String?
+  macAddress  String?
+  networkType String?
+  port        String?
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([ipAddress])
+  @@map("network_details")
+}
+
+model SoftwareDetail {
+  assetId String @id @db.Uuid
+
+  vendor        String?
+  version       String?
+  edition       String?
+  licenseType   String?
+  seatCount     Int?
+  licenseExpiry DateTime?
+  installedOn   DateTime?
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("software_details")
+}
+
+/**
+ * --------------------------------------------------------------------------
+ */
+/**
+ * Assignment, maintenance and history
+ */
+/**
+ * --------------------------------------------------------------------------
+ */
+
+/// Append-only assignment trail. A partial unique index added in the migration
+/// guarantees that at most one row per asset has `returnedAt = NULL`.
+model AssetAssignment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  assetId      String  @db.Uuid
+  employeeId   String  @db.Uuid
+  assignedById String? @db.Uuid
+
+  assignedAt DateTime  @default(now())
+  returnedAt DateTime?
+  note       String?
+  returnNote String?
+
+  asset      Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee   EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  assignedBy User?           @relation("AssignmentActor", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([employeeId, returnedAt])
+  @@index([returnedAt])
+  @@map("asset_assignments")
+}
+
+model AssetMaintenance {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  assetId String @db.Uuid
+
+  type        MaintenanceType
+  status      MaintenanceStatus @default(OPEN)
+  title       String
+  description String?
+
+  scheduledFor DateTime?
+  completedAt  DateTime?
+  cost         Decimal?  @db.Decimal(14, 2)
+  vendor       String?
+
+  performedById String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asset       Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  performedBy User? @relation("MaintenancePerformer", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([assetId, status])
+  @@index([scheduledFor])
+  @@map("asset_maintenance")
+}
+
+/// Operations imported from `amaliyatHaye Fard.xlsx` — installing software,
+/// repairs, moves, and similar technical activity. Kept separate from
+/// maintenance because the operational log is broader and may not be a formal
+/// work order.
+model AssetOperation {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  assetId    String? @db.Uuid
+  employeeId String? @db.Uuid
+
+  operationType String
+  performedAt   DateTime
+  description   String?
+
+  createdAt DateTime @default(now())
+
+  asset    Asset?           @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  employee EmployeeProfile? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([employeeId])
+  @@index([performedAt])
+  @@map("asset_operations")
+}
+
+/// Visits imported from `export (4).xlsx`. The source has no reliable asset
+/// identifier, so `assetId` is optional and the record remains useful as an
+/// employee/location inspection even before reconciliation.
+model AssetInspection {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  assetId    String? @db.Uuid
+  employeeId String? @db.Uuid
+
+  visitedAt DateTime
+  visitType String?
+
+  healthPercent   Int?
+  daysOfOperation Int?
+  temperature     Decimal? @db.Decimal(5, 2)
+  description     String?
+
+  createdAt DateTime @default(now())
+
+  asset    Asset?           @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  employee EmployeeProfile? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([employeeId])
+  @@index([visitedAt])
+  @@map("asset_inspections")
 }
