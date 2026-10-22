@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Suspense } from "react"
 import AdminShell from "@/app/components/admin/AdminShell"
-import { requireRole } from "@/lib/auth/auth"
+import { requireAnyRole } from "@/lib/auth/auth"
 
 /**
  * The admin area deliberately blocks navigations on the per-request role
@@ -12,13 +12,15 @@ import { requireRole } from "@/lib/auth/auth"
 export const instant = false
 
 /**
- * The system-administrator area of the panel.
+ * The privileged area of the panel.
  *
  * Two gates, deliberately:
  *   proxy.ts        — a session cookie must exist at all (cheap, no DB).
- *   this async gate — the session must be real and its role SYS_ADMIN.
+ *   this async gate — the session must be real and hold at least one
+ *                     privileged capability (employee management or assets).
  * Doing role checks by hiding menu entries (the thing the requirement calls
  * out) is never enough; this is the check that runs before one byte renders.
+ * Each page and API still checks its exact action.
  */
 export default function AdminLayout({ children }: { children: ReactNode }) {
     return (
@@ -29,7 +31,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 }
 
 async function AdminGate({ children }: { children: ReactNode }) {
-    const user = await requireRole("admin.users.read", "/login")
+    const user = await requireAnyRole(["admin.users.read", "equipment.read"], "/login")
     return <AdminShell user={user}>{children}</AdminShell>
 }
 

@@ -16,10 +16,13 @@ interface InputFieldProps {
    hint?: string
    /** Text direction for the input itself (e.g. LTR usernames inside the RTL page). */
    dir?: "ltr" | "rtl" | "auto"
+   /** Numeric step for `type="number"`; `any` allows decimals. */
+   step?: string | number
+   inputMode?: "text" | "numeric" | "decimal" | "tel" | "email" | "url" | "search"
 }
 
 const baseInputClass =
-   "w-full rounded-xl border border-navy-300 bg-surface text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400"
+   "w-full rounded-xl border border-navy-300 bg-surface text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400"
 
 export default function InputField({
    name,
@@ -33,6 +36,8 @@ export default function InputField({
    icon,
    hint,
    dir,
+   step,
+   inputMode,
 }: InputFieldProps) {
    const hasError = Boolean(touched && error)
 
@@ -47,11 +52,9 @@ export default function InputField({
 
    return (
       <div className={className || undefined}>
-         <label htmlFor={name} className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">
+         <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
             {label}
          </label>
-
-         {hint && !hasError ? <p className="mb-1.5 text-xs text-navy-500 dark:text-navy-400">{hint}</p> : null}
 
          <div className="relative">
             {icon ? (
@@ -66,10 +69,13 @@ export default function InputField({
                placeholder={placeholder}
                autoComplete={autoComplete}
                dir={dir}
+               step={step}
+               inputMode={inputMode}
                className={inputClass}
             />
          </div>
 
+         {hint && !hasError ? <p className="mt-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
          <ErrorMessage name={name} component="p" className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400" />
       </div>
    )

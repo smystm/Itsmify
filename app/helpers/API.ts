@@ -11,13 +11,19 @@ export class ApiError extends Error {
    errors?: Record<string, string>
    /** `code` marks protocol-level failures (rate limit, account states). */
    code?: string
+   /** Structured details such as the number of active assets blocking a delete. */
+   details?: Record<string, unknown>
 
-   constructor(message: string, init?: { errors?: Record<string, string>; code?: string; status?: number }) {
+   constructor(
+      message: string,
+      init?: { errors?: Record<string, string>; code?: string; status?: number; details?: Record<string, unknown> },
+   ) {
       super(message)
       this.name = "ApiError"
       this.errors = init?.errors
       this.code = init?.code
       this.status = init?.status
+      this.details = init?.details
    }
 
    status?: number
@@ -83,5 +89,6 @@ function errorFrom(res: Response, data: Record<string, unknown>): ApiError {
    return new ApiError(String(data.error ?? data.message ?? `request failed (${res.status})`), {
       code: typeof data.code === "string" ? data.code : undefined,
       status: res.status,
+      details: (data.details as Record<string, unknown> | undefined) ?? undefined,
    })
 }

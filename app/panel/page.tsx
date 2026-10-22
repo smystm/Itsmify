@@ -3,6 +3,7 @@ import QuickActionTile from "@/app/components/ui/QuickActionTile"
 import PageHero, { AvatarTile } from "@/app/components/ui/PageHero"
 import StatStrip from "@/app/components/ui/StatStrip"
 import { requireUser } from "@/lib/auth/auth"
+import { formatJalaliDate } from "@/lib/date/jalali"
 import { fa } from "@/lib/i18n/fa"
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ export default async function PanelPage() {
                     { value: roleLabel, label: fa.panel.roleLabel, icon: <ShieldIcon className="h-5 w-5" /> },
                     { value: statusLabel, label: fa.panel.statusLabel, icon: <ClipboardIcon className="h-5 w-5" /> },
                     { value: user.phone ?? fa.panel.phoneNotSet, label: fa.panel.phoneLabel, icon: <PhoneIcon className="h-5 w-5" />, dir: "ltr" },
-                    { value: new Date(user.createdAt).toLocaleDateString("fa-IR"), label: fa.panel.memberSince, icon: <CalendarIcon className="h-5 w-5" /> },
+                    { value: formatJalaliDate(user.createdAt), label: fa.panel.memberSince, icon: <CalendarIcon className="h-5 w-5" /> },
                 ]}
             />
 

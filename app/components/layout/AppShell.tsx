@@ -51,6 +51,7 @@ export default function AppShell({ user, sections, tone, title, description, chi
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-navy-100 font-vazirmatn dark:bg-navy-950" dir="rtl" lang="fa">
+
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:start-6 z-50 rounded-full bg-surface px-4 py-2 text-sm font-bold text-navy-900 shadow-lg"
@@ -58,14 +59,12 @@ export default function AppShell({ user, sections, tone, title, description, chi
                 {fa.common.skipToContent}
             </a>
 
-            {/* Ambient glows behind the content column only, so tables stay readable. */}
-            <div aria-hidden="true" className="pointer-events-none absolute -top-40 -start-24 h-[24rem] w-[24rem] rounded-full bg-brand-400/25 blur-[130px]" />
-            <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 -end-24 h-[26rem] w-[26rem] rounded-full bg-accent-400/20 blur-[130px]" />
-
             {/* Fixed desktop sidebar. */}
             <aside
                 aria-label={tone === "admin" ? fa.nav.adminNavLabel : fa.nav.panelNavLabel}
-                className="fixed inset-y-0 start-0 z-40 hidden w-72 shrink-0 border-s border-border-subtle bg-surface lg:block"
+                className={`fixed inset-y-0 start-0 z-40 hidden w-72 shrink-0 border-s border-border-subtle bg-surface lg:block ${
+                    tone === "admin" ? "border-t-2 border-t-accent-500" : "border-t-2 border-t-brand-500"
+                }`}
             >
                 <SidebarContent sections={sections} tone={tone} activePathname={pathname ?? ""} />
             </aside>
@@ -86,7 +85,13 @@ export default function AppShell({ user, sections, tone, title, description, chi
 
                         <div className="flex min-w-0 flex-1 flex-col">
                             {small ? (
-                                <p className="truncate text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-navy-400">{small}</p>
+                                <p
+                                    className={`truncate text-[11px] font-bold ${
+                                        tone === "admin" ? "text-accent-700 dark:text-accent-300" : "text-brand-700 dark:text-brand-300"
+                                    }`}
+                                >
+                                    {small}
+                                </p>
                             ) : null}
                             <h1 className="truncate text-lg font-extrabold text-navy-950 dark:text-white">{heading}</h1>
                         </div>

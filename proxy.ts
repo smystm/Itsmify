@@ -22,8 +22,8 @@ import type { NextRequest } from "next/server"
  * reason and is protected by the same session-cookie gate. */
 const PROTECTED_PREFIXES = ["/panel", "/change-password"]
 
-/** SYS_ADMIN area — proxy bounces everyone without a session cookie; the
- * admin layout then re-verifies the role server-side. */
+/** Privileged area — proxy bounces everyone without a session cookie; the
+ * admin layout then re-verifies that the user holds employee or asset access. */
 const ADMIN_PREFIX = "/admin"
 
 export function proxy(request: NextRequest) {

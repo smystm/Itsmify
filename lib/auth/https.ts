@@ -33,6 +33,18 @@ export async function apiRequireRole(
    request: NextRequest,
    action: Action,
 ): Promise<Response | null> {
+   return apiRequireAnyAction(request, action)
+}
+
+/**
+ * Guard for shared screens whose roles do not all hold one single action.
+ * The admin area, for example, is reachable by SYS_ADMIN (employees) and the
+ * IT roles (assets), but not by every role that can log in.
+ */
+export async function apiRequireAnyAction(
+   request: NextRequest,
+   ...actions: Action[]
+): Promise<Response | null> {
    const user = await apiSessionUser(request)
    if (!user) {
       return Response.json({ error: "unauthenticated" }, { status: 401 })
@@ -40,7 +52,7 @@ export async function apiRequireRole(
    if (user.mustChangePassword) {
       return Response.json({ error: "password_change_required", code: "PASSWORD_CHANGE_REQUIRED" }, { status: 403 })
    }
-   if (!can(user.role, action)) {
+   if (!actions.some((action) => can(user.role, action))) {
       return Response.json({ error: "forbidden" }, { status: 403 })
    }
    return null

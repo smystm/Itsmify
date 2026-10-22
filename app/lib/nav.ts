@@ -1,4 +1,5 @@
 import { fa } from "@/lib/i18n/fa"
+import { can } from "@/lib/auth/permissions"
 import type { SessionUser } from "@/lib/auth/session"
 
 /**
@@ -64,17 +65,28 @@ export function panelNavSections(user: SessionUser): NavSection[] {
                     icon: "tickets",
                     badge: fa.common.comingSoon,
                 },
-                {
-                    kind: "placeholder",
-                    label: fa.nav.equipment,
-                    icon: "equipment",
-                    badge: fa.common.comingSoon,
-                },
+                ...(can(user.role, "equipment.read")
+                    ? ([
+                         {
+                             kind: "link",
+                             href: "/admin/assets",
+                             label: fa.nav.assets,
+                             icon: "equipment",
+                         },
+                      ] satisfies NavItem[])
+                    : ([
+                         {
+                             kind: "placeholder",
+                             label: fa.nav.equipment,
+                             icon: "equipment",
+                             badge: fa.common.comingSoon,
+                         },
+                      ] satisfies NavItem[])),
             ],
         },
     ]
 
-    if (user.role === "SYS_ADMIN") {
+    if (can(user.role, "admin.users.read") || can(user.role, "equipment.read")) {
         sections.push({
             id: "other",
             heading: fa.nav.groupOther,
@@ -92,26 +104,39 @@ export function panelNavSections(user: SessionUser): NavSection[] {
     return sections
 }
 
-export function adminNavSections(): NavSection[] {
+export function adminNavSections(user: SessionUser): NavSection[] {
+    const items: NavItem[] = [
+        {
+            kind: "link",
+            href: "/admin",
+            label: fa.nav.adminOverview,
+            icon: "overview",
+            exact: true,
+        },
+    ]
+
+    if (can(user.role, "admin.users.read")) {
+        items.push({
+            kind: "link",
+            href: "/admin/employees",
+            label: fa.nav.employees,
+            icon: "users",
+        })
+    }
+    if (can(user.role, "equipment.read")) {
+        items.push({
+            kind: "link",
+            href: "/admin/assets",
+            label: fa.nav.assets,
+            icon: "equipment",
+        })
+    }
+
     return [
         {
             id: "main",
             heading: fa.nav.groupMain,
-            items: [
-                {
-                    kind: "link",
-                    href: "/admin",
-                    label: fa.nav.adminOverview,
-                    icon: "overview",
-                    exact: true,
-                },
-                {
-                    kind: "link",
-                    href: "/admin/users",
-                    label: fa.nav.users,
-                    icon: "users",
-                },
-            ],
+            items,
         },
         {
             id: "roadmap",
@@ -121,12 +146,6 @@ export function adminNavSections(): NavSection[] {
                     kind: "placeholder",
                     label: fa.nav.tickets,
                     icon: "tickets",
-                    badge: fa.common.comingSoon,
-                },
-                {
-                    kind: "placeholder",
-                    label: fa.nav.equipment,
-                    icon: "equipment",
                     badge: fa.common.comingSoon,
                 },
             ],

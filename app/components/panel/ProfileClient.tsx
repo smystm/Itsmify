@@ -15,9 +15,11 @@ import {
    TabsTrigger,
 } from "@animate-ui/react/primitives/tabs"
 import {
+   BuildingOffice2Icon,
    CalendarDaysIcon,
    CheckBadgeIcon,
    ClockIcon,
+   ComputerDesktopIcon,
    DevicePhoneMobileIcon,
    IdentificationIcon,
    KeyIcon,
@@ -27,6 +29,7 @@ import {
 } from "@heroicons/react/24/outline"
 import PageHero, { AvatarTile } from "@/app/components/ui/PageHero"
 import StatusBadge from "@/app/components/ui/StatusBadge"
+import EmptyState from "@/app/components/ui/EmptyState"
 import InputField from "@/app/components/ui/InputField"
 import Button from "@/app/components/ui/Button"
 import AdminNotice from "@/app/components/ui/AdminNotice"
@@ -34,6 +37,7 @@ import { FormShell } from "@/app/components/auth/FormShell"
 import { useUserDisplaySetter } from "@/app/components/layout/UserDisplayContext"
 import { postJson, ApiError } from "@/app/helpers/API"
 import { isValidPhone, normalizePhone } from "@/lib/auth/phone"
+import { formatJalaliDate } from "@/lib/date/jalali"
 import { fa } from "@/lib/i18n/fa"
 
 export interface PanelProfileResponse {
@@ -49,6 +53,28 @@ export interface PanelProfileResponse {
    mustChangePassword: boolean
    createdAt: string
    updatedAt: string
+   employeeProfile: {
+      personnelCode: string | null
+      jobTitle: string | null
+      employmentType: "OFFICIAL" | "CONTRACTUAL" | "TEMPORARY" | "OTHER" | null
+      hireDate: string | null
+      notes: string | null
+      orgUnit: { id: string; name: string } | null
+      location: { id: string; floor: string; roomNumber: string } | null
+   } | null
+   assignedAssets: {
+      assignmentId: string
+      assignedAt: string
+      note: string | null
+      asset: {
+         id: string
+         assetCode: string
+         name: string
+         category: "HARDWARE" | "SOFTWARE" | "NETWORK"
+         type: string
+         status: string
+      }
+   }[]
 }
 
 interface ProfileClientProps {
@@ -216,6 +242,24 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
                      </TabsTrigger>
                   </TabsHighlightItem>
 
+                  <TabsHighlightItem value="organization" className="flex-1">
+                     <TabsTrigger
+                        value="organization"
+                        className="w-full whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold text-navy-700 transition-colors data-[active]:text-brand-800 dark:text-navy-200 dark:data-[active]:text-brand-200"
+                     >
+                        {fa.profile.organizationTab}
+                     </TabsTrigger>
+                  </TabsHighlightItem>
+
+                  <TabsHighlightItem value="assets" className="flex-1">
+                     <TabsTrigger
+                        value="assets"
+                        className="w-full whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold text-navy-700 transition-colors data-[active]:text-brand-800 dark:text-navy-200 dark:data-[active]:text-brand-200"
+                     >
+                        {fa.profile.assetsTab}
+                     </TabsTrigger>
+                  </TabsHighlightItem>
+
                   <TabsHighlightItem value="phone" className="flex-1">
                      <TabsTrigger
                         value="phone"
@@ -281,18 +325,194 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
                         <InfoTile
                            icon={<CalendarDaysIcon className="h-5 w-5" />}
                            label={fa.profile.memberSince}
-                           value={new Date(profile.createdAt).toLocaleDateString("fa-IR")}
+                           value={formatJalaliDate(profile.createdAt)}
                         />
                         <InfoTile
                            icon={<ClockIcon className="h-5 w-5" />}
                            label={fa.profile.lastLogin}
                            value={
                               profile.lastLoginAt
-                                 ? new Date(profile.lastLoginAt).toLocaleString("fa-IR")
+                                 ? new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                   }).format(new Date(profile.lastLoginAt))
                                  : fa.profile.never
                            }
                         />
                      </dl>
+                  </section>
+               </TabsContent>
+
+               <TabsContent
+                  value="organization"
+                  className="animate-fade-in-up rounded-3xl border border-border-subtle bg-surface p-6 shadow-xl shadow-navy-900/5 sm:p-8 dark:shadow-black/20"
+               >
+                  <section aria-label={fa.profile.organizationSection}>
+                     <div className="flex items-start gap-4">
+                        <span
+                           aria-hidden="true"
+                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200"
+                        >
+                           <BuildingOffice2Icon className="h-5 w-5" />
+                        </span>
+                        <div>
+                           <h2 className="text-lg font-extrabold text-navy-950 dark:text-white">{fa.profile.organizationTitle}</h2>
+                           <p className="mt-1 text-sm leading-6 text-navy-600 dark:text-navy-300">{fa.profile.organizationDescription}</p>
+                        </div>
+                     </div>
+
+                     {!profile.employeeProfile ? (
+                        <div className="mt-6">
+                           <EmptyState
+                              icon={<BuildingOffice2Icon className="h-6 w-6" />}
+                              title={fa.profile.organizationEmptyTitle}
+                              body={fa.profile.organizationEmptyBody}
+                              tone="brand"
+                           />
+                        </div>
+                     ) : (
+                        <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                           <InfoTile
+                              icon={<IdentificationIcon className="h-5 w-5" />}
+                              label={fa.profile.personnelCode}
+                              value={profile.employeeProfile.personnelCode ?? fa.profile.notSet}
+                              dir="ltr"
+                           />
+                           <InfoTile
+                              icon={<ComputerDesktopIcon className="h-5 w-5" />}
+                              label={fa.profile.jobTitle}
+                              value={profile.employeeProfile.jobTitle ?? fa.profile.notSet}
+                           />
+                           <InfoTile
+                              icon={<UserCircleIcon className="h-5 w-5" />}
+                              label={fa.profile.employmentType}
+                              value={
+                                 profile.employeeProfile.employmentType
+                                    ? fa.employees.employmentTypes[profile.employeeProfile.employmentType] ??
+                                      profile.employeeProfile.employmentType
+                                    : fa.profile.notSet
+                              }
+                           />
+                           <InfoTile
+                              icon={<CalendarDaysIcon className="h-5 w-5" />}
+                              label={fa.profile.hireDate}
+                              value={
+                                 profile.employeeProfile.hireDate
+                                    ? formatJalaliDate(profile.employeeProfile.hireDate)
+                                    : fa.profile.notSet
+                              }
+                           />
+                           <InfoTile
+                              icon={<BuildingOffice2Icon className="h-5 w-5" />}
+                              label={fa.profile.orgUnit}
+                              value={profile.employeeProfile.orgUnit?.name ?? fa.profile.notSet}
+                           />
+                           <InfoTile
+                              icon={<BuildingOffice2Icon className="h-5 w-5" />}
+                              label={fa.profile.location}
+                              value={
+                                 profile.employeeProfile.location
+                                    ? `${profile.employeeProfile.location.floor} / ${profile.employeeProfile.location.roomNumber}`
+                                    : fa.profile.notSet
+                              }
+                           />
+                        </dl>
+                     )}
+                  </section>
+               </TabsContent>
+
+               <TabsContent
+                  value="assets"
+                  className="animate-fade-in-up rounded-3xl border border-border-subtle bg-surface p-6 shadow-xl shadow-navy-900/5 sm:p-8 dark:shadow-black/20"
+               >
+                  <section aria-label={fa.profile.assetsSection}>
+                     <div className="flex items-start gap-4">
+                        <span
+                           aria-hidden="true"
+                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200"
+                        >
+                           <ComputerDesktopIcon className="h-5 w-5" />
+                        </span>
+                        <div>
+                           <h2 className="text-lg font-extrabold text-navy-950 dark:text-white">{fa.profile.assetsTitle}</h2>
+                           <p className="mt-1 text-sm leading-6 text-navy-600 dark:text-navy-300">{fa.profile.assetsDescription}</p>
+                        </div>
+                     </div>
+
+                     {profile.assignedAssets.length === 0 ? (
+                        <div className="mt-6">
+                           <EmptyState
+                              icon={<ComputerDesktopIcon className="h-6 w-6" />}
+                              title={fa.profile.assetsEmptyTitle}
+                              body={fa.profile.assetsEmptyBody}
+                              tone="accent"
+                           />
+                        </div>
+                     ) : (
+                        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                           {profile.assignedAssets.map((assignment) => {
+                              const content = (
+                                 <>
+                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                       <div className="min-w-0">
+                                          <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">
+                                             {assignment.asset.name}
+                                          </p>
+                                          <p dir="ltr" className="mt-0.5 font-mono text-[11px] text-brand-700 dark:text-brand-200">
+                                             {assignment.asset.assetCode}
+                                          </p>
+                                       </div>
+                                       <StatusBadge
+                                          tone={
+                                             assignment.asset.status === "ACTIVE"
+                                                ? "approved"
+                                                : assignment.asset.status === "IN_REPAIR"
+                                                  ? "pending"
+                                                  : assignment.asset.status === "LOST"
+                                                    ? "rejected"
+                                                    : "neutral"
+                                          }
+                                          label={fa.assets.statuses[assignment.asset.status] ?? assignment.asset.status}
+                                       />
+                                    </div>
+                                    <p className="mt-2 text-xs text-navy-600 dark:text-navy-300">
+                                       {fa.assets.categories[assignment.asset.category] ?? assignment.asset.category}
+                                       {" · "}
+                                       {fa.assets.types[assignment.asset.type] ?? assignment.asset.type}
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-navy-500 dark:text-navy-400">
+                                       {fa.profile.assignedAt}: {formatJalaliDate(assignment.assignedAt)}
+                                    </p>
+                                    {assignment.note ? (
+                                       <p className="mt-2 rounded-xl bg-surface-muted/70 px-3 py-2 text-[11px] leading-6 text-navy-600 dark:bg-navy-800/60 dark:text-navy-300">
+                                          {assignment.note}
+                                       </p>
+                                    ) : null}
+                                 </>
+                              )
+
+                              return (
+                                 <li key={assignment.assignmentId}>
+                                    {profile.role === "EMPLOYEE" ? (
+                                       <div className="h-full rounded-2xl border border-border-subtle p-4">
+                                          {content}
+                                       </div>
+                                    ) : (
+                                       <Link
+                                          href={`/admin/assets/${assignment.asset.id}`}
+                                          className="block h-full rounded-2xl border border-border-subtle p-4 transition-colors hover:border-brand-400 dark:border-navy-700"
+                                       >
+                                          {content}
+                                       </Link>
+                                    )}
+                                 </li>
+                              )
+                           })}
+                        </ul>
+                     )}
                   </section>
                </TabsContent>
 

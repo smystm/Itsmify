@@ -35,11 +35,11 @@ export default function PasswordField({
 
    return (
       <div className={className || undefined}>
-         <label htmlFor={name} className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">
+         <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
             {label}
          </label>
 
-         {hint && !hasError ? <p className="mb-1.5 text-xs text-navy-500 dark:text-navy-400">{hint}</p> : null}
+         {hint && !hasError ? <p className="mt-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
 
          <div className="relative">
             <Field
@@ -49,20 +49,20 @@ export default function PasswordField({
                placeholder={placeholder}
                autoComplete={autoComplete}
                dir="ltr"
-               className={`w-full rounded-xl border bg-surface px-4 py-3 pe-12 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400 ${
+               className={`w-full rounded-xl border bg-surface pl-4 pr-12 py-3 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400 ${
                   hasError
                      ? "border-red-500 ring-2 ring-red-500/15"
                      : "border-navy-300 dark:border-navy-700"
                }`}
             />
 
-            <button
-               type="button"
-               onClick={() => setVisible((current) => !current)}
-               aria-label={visible ? fa.common.hidePassword : fa.common.showPassword}
-               aria-pressed={visible}
-               className="absolute inset-y-0 end-0 flex w-11 items-center justify-center rounded-e-xl text-navy-500 transition-colors hover:text-brand-700 dark:text-navy-400 dark:hover:text-brand-200"
-            >
+             <button
+                type="button"
+                onClick={() => setVisible((current) => !current)}
+                aria-label={visible ? fa.common.hidePassword : fa.common.showPassword}
+                aria-pressed={visible}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-navy-500 transition-colors hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-navy-400 dark:hover:text-brand-200"
+             >
                {visible ? <EyeSlashIcon className="h-5 w-5" aria-hidden="true" /> : <EyeIcon className="h-5 w-5" aria-hidden="true" />}
             </button>
          </div>

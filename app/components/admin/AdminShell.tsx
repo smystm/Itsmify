@@ -8,10 +8,11 @@ import type { SessionUser } from "@/lib/auth/session"
 import { fa } from "@/lib/i18n/fa"
 
 /**
- * SYS_ADMIN area shell. Same skeleton as the panel, saffron accents so the
- * privileged area reads as specially trusted at a glance. It provides the
- * same user-display context as the panel, so the header identity stays in
- * lockstep with a self-profile PATCH no matter which shell is mounted.
+ * Privileged area shell. SYS_ADMIN manages employees and accounts;
+ * IT_SPECIALIST/IT_MANAGER manage assets. Same skeleton as the panel, saffron
+ * accents so the privileged area reads as specially trusted at a glance. It
+ * provides the same user-display context as the panel, so header identity stays
+ * in lockstep with a self-profile PATCH no matter which shell is mounted.
  */
 export default function AdminShell({ user, children }: { user: SessionUser; children: ReactNode }) {
    const [displayUser, setDisplayUser] = useState(user)
@@ -20,7 +21,7 @@ export default function AdminShell({ user, children }: { user: SessionUser; chil
       <UserDisplayContext.Provider value={{ user: displayUser, setUser: setDisplayUser }}>
          <AppShell
             user={user}
-            sections={adminNavSections()}
+            sections={adminNavSections(user)}
             tone="admin"
             title={fa.admin.metaTitle}
             description={fa.admin.heroDescription}

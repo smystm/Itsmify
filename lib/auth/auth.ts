@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { cacheLife } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { SESSION_COOKIE_NAME, sessionUserByToken, type SessionUser } from "./session"
-import { can, type Action } from "./permissions"
+import { can, canAny, type Action } from "./permissions"
 
 /**
  * The authorization gate every protected page goes through — the Data Access
@@ -80,5 +80,16 @@ export async function requireUser(redirectTo = "/login"): Promise<SessionUser> {
 export async function requireRole(action: Action, redirectTo = "/login"): Promise<SessionUser> {
    const user = await requireUser(redirectTo)
    if (!can(user.role, action)) redirect("/panel")
+   return user
+}
+
+/**
+ * Page-level gate for an area shared by roles with different capabilities.
+ * Holding any one of the supplied actions is enough; every route inside the
+ * area still checks its own write/delete capability.
+ */
+export async function requireAnyRole(actions: Action[], redirectTo = "/login"): Promise<SessionUser> {
+   const user = await requireUser(redirectTo)
+   if (!canAny(user.role, ...actions)) redirect("/panel")
    return user
 }
