@@ -93,7 +93,7 @@ export default function EmployeePicker({
       <div className="relative">
          <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 start-3 top-0 flex w-6 items-center justify-center text-navy-500"
+            className="pointer-events-none absolute inset-y-0 inset-s-3 top-0 flex w-6 items-center justify-center text-navy-500"
          >
             <MagnifyingGlassIcon className="h-5 w-5" />
          </span>
@@ -107,7 +107,7 @@ export default function EmployeePicker({
                setError(null)
             }}
             placeholder={placeholder}
-            className="w-full rounded-full border border-border-subtle bg-surface px-4 pe-11 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
+            className="w-full ps-10 rounded-full border border-border-subtle bg-surface px-4 pe-11 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
          />
 
          {query || loading ? (

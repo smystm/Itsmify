@@ -2,16 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import Link from "next/link"
-import {
-   ArrowPathIcon,
-   ArrowUturnLeftIcon,
-   ComputerDesktopIcon,
-   MagnifyingGlassIcon,
-   PencilSquareIcon,
-   PlusIcon,
-   TrashIcon,
-   UserPlusIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, ArrowUturnLeftIcon, ComputerDesktopIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, TrashIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import PageHero from "@/app/components/ui/PageHero"
 import AdminNotice, { SkeletonBlock } from "@/app/components/ui/AdminNotice"
 import EmptyState from "@/app/components/ui/EmptyState"
@@ -106,16 +97,10 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
       { value: "NETWORK", label: fa.assets.categories.NETWORK },
    ]
    const typeOptions = useMemo(() => {
-      const types = category ? TYPES_BY_CATEGORY[category as AssetCategoryValue] ?? [] : ASSET_TYPES
-      return [
-         { value: "", label: fa.assets.allTypes },
-         ...types.map((item) => ({ value: item, label: fa.assets.types[item] ?? item })),
-      ]
+      const types = category ? (TYPES_BY_CATEGORY[category as AssetCategoryValue] ?? []) : ASSET_TYPES
+      return [{ value: "", label: fa.assets.allTypes }, ...types.map((item) => ({ value: item, label: fa.assets.types[item] ?? item }))]
    }, [category])
-   const statusOptions = [
-      { value: "", label: fa.assets.allStatuses },
-      ...Object.entries(fa.assets.statuses).map(([value, label]) => ({ value, label })),
-   ]
+   const statusOptions = [{ value: "", label: fa.assets.allStatuses }, ...Object.entries(fa.assets.statuses).map(([value, label]) => ({ value, label }))]
    const assignedOptions = [
       { value: "", label: fa.assets.allAssignees },
       { value: "assigned", label: fa.assets.assignedOnly },
@@ -244,30 +229,61 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
          <section className="animate-fade-in-up rounded-3xl border border-border-subtle bg-surface p-4 shadow-lg shadow-navy-900/5 dark:shadow-black/20 sm:p-5">
             <div className="flex flex-wrap items-end gap-3">
                <div className="relative min-w-[15rem] flex-1">
-                  <span
-                     aria-hidden="true"
-                     className="pointer-events-none absolute inset-y-0 start-3 flex w-6 items-center justify-center text-navy-500"
-                  >
-                     <MagnifyingGlassIcon className="h-5 w-5" />
-                  </span>
                   <label htmlFor="asset-search" className="mb-1 block text-[11px] font-bold text-navy-500 dark:text-navy-400">
                      {fa.common.search}
                   </label>
-                  <input
-                     id="asset-search"
-                     type="search"
-                     value={query}
-                     onChange={(event) => setQuery(event.target.value)}
-                     placeholder={fa.assets.searchPlaceholder}
-                     className="w-full rounded-full border border-border-subtle bg-surface px-4 pe-11 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
-                  />
+                  <div className="relative">
+                     <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 inset-s-3 flex w-6 items-center justify-center text-navy-500">
+                        <MagnifyingGlassIcon className="h-5 w-5" />
+                     </span>
+                     <input
+                        id="asset-search"
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={fa.assets.searchPlaceholder}
+                        className="w-full rounded-full ps-10 border border-border-subtle bg-surface px-4 pe-11 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
+                     />
+                  </div>
                </div>
 
                <FilterSelect label={fa.assets.columns.category} value={category} onChange={changeCategory} options={categoryOptions} />
-               <FilterSelect label={fa.assets.columns.type} value={type} onChange={(value) => { setType(value); setPage(1) }} options={typeOptions} />
-               <FilterSelect label={fa.assets.columns.status} value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={statusOptions} />
-               <FilterSelect label={fa.assets.columns.assignee} value={assigned} onChange={(value) => { setAssigned(value); setPage(1) }} options={assignedOptions} />
-               <FilterSelect label={fa.assets.sortLabel} value={sort} onChange={(value) => { setSort(value); setPage(1) }} options={sortOptions} />
+               <FilterSelect
+                  label={fa.assets.columns.type}
+                  value={type}
+                  onChange={(value) => {
+                     setType(value)
+                     setPage(1)
+                  }}
+                  options={typeOptions}
+               />
+               <FilterSelect
+                  label={fa.assets.columns.status}
+                  value={status}
+                  onChange={(value) => {
+                     setStatus(value)
+                     setPage(1)
+                  }}
+                  options={statusOptions}
+               />
+               <FilterSelect
+                  label={fa.assets.columns.assignee}
+                  value={assigned}
+                  onChange={(value) => {
+                     setAssigned(value)
+                     setPage(1)
+                  }}
+                  options={assignedOptions}
+               />
+               <FilterSelect
+                  label={fa.assets.sortLabel}
+                  value={sort}
+                  onChange={(value) => {
+                     setSort(value)
+                     setPage(1)
+                  }}
+                  options={sortOptions}
+               />
 
                <button
                   type="button"
@@ -281,11 +297,7 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-navy-500 dark:text-navy-400">
                <span>{totalLabel}</span>
-               <span>
-                  {loading
-                     ? fa.assets.loading
-                     : fa.assets.pageOf.replace("{page}", String(data?.page ?? page)).replace("{pages}", String(data?.totalPages ?? 0))}
-               </span>
+               <span>{loading ? fa.assets.loading : fa.assets.pageOf.replace("{page}", String(data?.page ?? page)).replace("{pages}", String(data?.totalPages ?? 0))}</span>
             </div>
          </section>
 
@@ -368,11 +380,7 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
          ) : null}
 
          {assigning ? (
-            <Modal
-               title={fa.assets.assign.title}
-               description={fa.assets.assign.description.replace("{name}", assigning.name)}
-               onClose={() => setAssigning(null)}
-            >
+            <Modal title={fa.assets.assign.title} description={fa.assets.assign.description.replace("{name}", assigning.name)} onClose={() => setAssigning(null)}>
                <div className="space-y-4">
                   {assigning.currentAssignment ? (
                      <div className="rounded-2xl bg-surface-muted/70 px-4 py-3 text-xs dark:bg-navy-900/50">
@@ -384,9 +392,7 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
                   ) : null}
                   <EmployeePicker value={assignEmployee?.profileId ?? ""} onChange={setAssignEmployee} />
                   <label className="block">
-                     <span className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">
-                        {fa.assets.assign.note}
-                     </span>
+                     <span className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">{fa.assets.assign.note}</span>
                      <textarea
                         rows={3}
                         value={assignNote}
@@ -397,7 +403,11 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
                   </label>
                   {actionError ? <AdminNotice tone="error">{actionError}</AdminNotice> : null}
                   <div className="flex justify-end gap-3">
-                     <button type="button" onClick={() => setAssigning(null)} className="rounded-full px-4 py-2 text-sm font-bold text-navy-600 hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800">
+                     <button
+                        type="button"
+                        onClick={() => setAssigning(null)}
+                        className="rounded-full px-4 py-2 text-sm font-bold text-navy-600 hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800"
+                     >
                         {fa.common.cancel}
                      </button>
                      <button
@@ -414,16 +424,10 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
          ) : null}
 
          {returning ? (
-            <Modal
-               title={fa.assets.assign.returnTitle}
-               description={fa.assets.assign.returnDescription.replace("{name}", returning.name)}
-               onClose={() => setReturning(null)}
-            >
+            <Modal title={fa.assets.assign.returnTitle} description={fa.assets.assign.returnDescription.replace("{name}", returning.name)} onClose={() => setReturning(null)}>
                <div className="space-y-4">
                   <label className="block">
-                     <span className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">
-                        {fa.assets.assign.returnNote}
-                     </span>
+                     <span className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">{fa.assets.assign.returnNote}</span>
                      <textarea
                         rows={3}
                         value={returnNote}
@@ -433,7 +437,11 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
                   </label>
                   {actionError ? <AdminNotice tone="error">{actionError}</AdminNotice> : null}
                   <div className="flex justify-end gap-3">
-                     <button type="button" onClick={() => setReturning(null)} className="rounded-full px-4 py-2 text-sm font-bold text-navy-600 hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800">
+                     <button
+                        type="button"
+                        onClick={() => setReturning(null)}
+                        className="rounded-full px-4 py-2 text-sm font-bold text-navy-600 hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800"
+                     >
                         {fa.common.cancel}
                      </button>
                      <button
@@ -509,14 +517,10 @@ function AssetTableRow({
                   {asset.currentAssignment.employee.firstName} {asset.currentAssignment.employee.lastName}
                </Link>
             ) : (
-               <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-bold text-navy-500 dark:bg-navy-800 dark:text-navy-400">
-                  {fa.assets.unassignedBadge}
-               </span>
+               <span className="rounded-full bg-surface-muted px-2 py-1 text-[10px] font-bold text-navy-500 dark:bg-navy-800 dark:text-navy-400">{fa.assets.unassignedBadge}</span>
             )}
          </td>
-         <td className="px-4 py-4 text-xs text-navy-600 dark:text-navy-300">
-            {asset.location ? `${asset.location.floor} / ${asset.location.roomNumber}` : "—"}
-         </td>
+         <td className="px-4 py-4 text-xs text-navy-600 dark:text-navy-300">{asset.location ? `${asset.location.floor} / ${asset.location.roomNumber}` : "—"}</td>
          <td className="px-4 py-4">
             <StatusBadge tone={assetTone(asset.status)} label={fa.assets.statuses[asset.status] ?? asset.status} />
          </td>
@@ -578,7 +582,9 @@ function AssetCard({
                <Link href={`/admin/assets/${asset.id}`} className="truncate font-extrabold text-navy-950 hover:text-brand-700 dark:text-white dark:hover:text-brand-200">
                   {asset.name}
                </Link>
-               <p dir="ltr" className="mt-0.5 font-mono text-[11px] text-brand-700 dark:text-brand-200">{asset.assetCode}</p>
+               <p dir="ltr" className="mt-0.5 font-mono text-[11px] text-brand-700 dark:text-brand-200">
+                  {asset.assetCode}
+               </p>
             </div>
             <StatusBadge tone={assetTone(asset.status)} label={fa.assets.statuses[asset.status] ?? asset.status} />
          </div>
@@ -591,20 +597,18 @@ function AssetCard({
             <div>
                <dt className="text-navy-500 dark:text-navy-400">{fa.assets.columns.assignee}</dt>
                <dd className="mt-0.5 truncate font-bold text-navy-800 dark:text-navy-100">
-                  {asset.currentAssignment
-                     ? `${asset.currentAssignment.employee.firstName} ${asset.currentAssignment.employee.lastName}`
-                     : fa.assets.unassignedBadge}
+                  {asset.currentAssignment ? `${asset.currentAssignment.employee.firstName} ${asset.currentAssignment.employee.lastName}` : fa.assets.unassignedBadge}
                </dd>
             </div>
             <div>
                <dt className="text-navy-500 dark:text-navy-400">{fa.assets.columns.location}</dt>
-               <dd className="mt-0.5 font-bold text-navy-800 dark:text-navy-100">
-                  {asset.location ? `${asset.location.floor} / ${asset.location.roomNumber}` : "—"}
-               </dd>
+               <dd className="mt-0.5 font-bold text-navy-800 dark:text-navy-100">{asset.location ? `${asset.location.floor} / ${asset.location.roomNumber}` : "—"}</dd>
             </div>
             <div>
                <dt className="text-navy-500 dark:text-navy-400">{fa.assets.columns.serial}</dt>
-               <dd dir="ltr" className="mt-0.5 truncate font-mono text-[11px] font-bold text-navy-800 dark:text-navy-100">{asset.serialNumber ?? "—"}</dd>
+               <dd dir="ltr" className="mt-0.5 truncate font-mono text-[11px] font-bold text-navy-800 dark:text-navy-100">
+                  {asset.serialNumber ?? "—"}
+               </dd>
             </div>
          </dl>
 
@@ -613,17 +617,28 @@ function AssetCard({
                {fa.assets.pageTitle}
             </Link>
             {canWrite ? (
-               <Link href={`/admin/assets/${asset.id}/edit`} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+               <Link
+                  href={`/admin/assets/${asset.id}/edit`}
+                  className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+               >
                   {fa.common.edit}
                </Link>
             ) : null}
             {canWrite ? (
-               <button type="button" onClick={onAssign} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+               <button
+                  type="button"
+                  onClick={onAssign}
+                  className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+               >
                   {fa.assets.detail.assignAction}
                </button>
             ) : null}
             {canWrite && asset.currentAssignment ? (
-               <button type="button" onClick={onReturn} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+               <button
+                  type="button"
+                  onClick={onReturn}
+                  className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+               >
                   {fa.assets.detail.returnAction}
                </button>
             ) : null}
@@ -637,17 +652,7 @@ function AssetCard({
    )
 }
 
-function RowAction({
-   children,
-   label,
-   onClick,
-   tone = "neutral",
-}: {
-   children: ReactNode
-   label: string
-   onClick: () => void
-   tone?: "neutral" | "brand" | "accent" | "danger"
-}) {
+function RowAction({ children, label, onClick, tone = "neutral" }: { children: ReactNode; label: string; onClick: () => void; tone?: "neutral" | "brand" | "accent" | "danger" }) {
    const tones = {
       neutral: "border-border-subtle text-navy-600 hover:border-brand-400 hover:text-brand-700 dark:border-navy-700 dark:text-navy-300",
       brand: "border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-200 dark:hover:bg-brand-500/10",
@@ -655,13 +660,7 @@ function RowAction({
       danger: "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-500/40 dark:text-red-200 dark:hover:bg-red-500/10",
    }
    return (
-      <button
-         type="button"
-         onClick={onClick}
-         aria-label={label}
-         title={label}
-         className={`rounded-full border p-2 transition-colors ${tones[tone]}`}
-      >
+      <button type="button" onClick={onClick} aria-label={label} title={label} className={`rounded-full border p-2 transition-colors ${tones[tone]}`}>
          {children}
       </button>
    )
