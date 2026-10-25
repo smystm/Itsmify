@@ -7,7 +7,7 @@ import type { SessionUser } from "@/lib/auth/session"
  * referenced by a small union — keeping React out of this module lets both
  * server and client components read the same navigation definition.
  */
-export type NavIcon = "overview" | "users" | "profile" | "security" | "tickets" | "equipment"
+export type NavIcon = "overview" | "users" | "profile" | "security" | "tickets" | "equipment" | "home"
 
 export interface NavLinkItem {
     kind: "link"
@@ -86,37 +86,36 @@ export function panelNavSections(user: SessionUser): NavSection[] {
         },
     ]
 
+    const otherItems: NavItem[] = []
     if (can(user.role, "admin.users.read") || can(user.role, "equipment.read")) {
-        sections.push({
-            id: "other",
-            heading: fa.nav.groupOther,
-            items: [
-                {
-                    kind: "link",
-                    href: "/admin",
-                    label: fa.nav.admin,
-                    icon: "security",
-                },
-            ],
+        otherItems.push({
+            kind: "link",
+            href: "/admin",
+            label: fa.nav.admin,
+            icon: "security",
         })
     }
+    otherItems.push({
+        kind: "link",
+        href: "/",
+        label: fa.nav.backToHome,
+        icon: "home",
+        exact: true,
+    })
+    sections.push({
+        id: "other",
+        heading: fa.nav.groupOther,
+        items: otherItems,
+    })
 
     return sections
 }
 
 export function adminNavSections(user: SessionUser): NavSection[] {
-    const items: NavItem[] = [
-        {
-            kind: "link",
-            href: "/admin",
-            label: fa.nav.adminOverview,
-            icon: "overview",
-            exact: true,
-        },
-    ]
+    const managementItems: NavItem[] = []
 
     if (can(user.role, "admin.users.read")) {
-        items.push({
+        managementItems.push({
             kind: "link",
             href: "/admin/employees",
             label: fa.nav.employees,
@@ -124,7 +123,7 @@ export function adminNavSections(user: SessionUser): NavSection[] {
         })
     }
     if (can(user.role, "equipment.read")) {
-        items.push({
+        managementItems.push({
             kind: "link",
             href: "/admin/assets",
             label: fa.nav.assets,
@@ -132,12 +131,31 @@ export function adminNavSections(user: SessionUser): NavSection[] {
         })
     }
 
-    return [
+    const sections: NavSection[] = [
         {
             id: "main",
-            heading: fa.nav.groupMain,
-            items,
+            heading: fa.nav.groupWorkspace,
+            items: [
+                {
+                    kind: "link",
+                    href: "/admin",
+                    label: fa.nav.adminOverview,
+                    icon: "overview",
+                    exact: true,
+                },
+            ],
         },
+    ]
+
+    if (managementItems.length > 0) {
+        sections.push({
+            id: "management",
+            heading: fa.nav.groupManagement,
+            items: managementItems,
+        })
+    }
+
+    sections.push(
         {
             id: "roadmap",
             heading: fa.nav.groupRoadmap,
@@ -160,9 +178,18 @@ export function adminNavSections(user: SessionUser): NavSection[] {
                     label: fa.nav.panel,
                     icon: "profile",
                 },
+                {
+                    kind: "link",
+                    href: "/",
+                    label: fa.nav.backToHome,
+                    icon: "home",
+                    exact: true,
+                },
             ],
         },
-    ]
+    )
+
+    return sections
 }
 
 export function isActiveNavItem(pathname: string, href: string, exact?: boolean): boolean {

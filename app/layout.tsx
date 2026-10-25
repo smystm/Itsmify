@@ -34,7 +34,7 @@ export const viewport: Viewport = {
    initialScale: 1,
    // Matches the page background so mobile browser chrome blends in.
    themeColor: [
-      { media: "(prefers-color-scheme: light)", color: "#f7fafc" },
+      { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
       { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
    ],
 }

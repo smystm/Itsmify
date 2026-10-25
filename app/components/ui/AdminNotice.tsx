@@ -13,7 +13,7 @@ interface AdminNoticeProps {
 export default function AdminNotice({ tone, children, className = "" }: AdminNoticeProps) {
     const tones: Record<NoticeTone, string> = {
         error: "border-red-300 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200",
-        success: "border-brand-300 bg-brand-50 text-brand-800 dark:border-brand-500/40 dark:bg-brand-500/10 dark:text-brand-200",
+        success: "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200",
         info: "border-border-subtle bg-surface text-navy-700 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-100",
     }
 

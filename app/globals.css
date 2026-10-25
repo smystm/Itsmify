@@ -12,15 +12,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Palette: "Turquoise & Saffron" (فیروزه‌ای و طلایی)
- * A deep midnight-navy base with Persian turquoise as the primary and saffron
- * gold as the accent — reused as-is so ITSMIFY reads as part of the same
- * design family, with every value changeable from this one file.
+ * Palette: "Blueprint Blue" (آبی مهندسی)
+ * A calm, enterprise blue system: a deep blue-navy base, bright blue as the
+ * primary action colour, and a sky-cyan secondary. All theme-aware components
+ * read from these tokens, so the whole product can be retuned here.
  */
 :root {
    color-scheme: light;
 
-   --background: #f7fafc;
+   --background: #f8fafc;
    --foreground: #0f172a;
 
    /* Surfaces — tuned so cards actually separate from the page in light mode. */
@@ -29,29 +29,29 @@
    --border-subtle: #e2e8f0;
    --border-strong: #cbd5e1;
 
-   /* Brand — Persian turquoise */
-   --brand-50: #f0fdfa;
-   --brand-100: #ccfbf1;
-   --brand-200: #99f6e4;
-   --brand-300: #5eead4;
-   --brand-400: #2dd4bf;
-   --brand-500: #14b8a6;
-   --brand-600: #0d9488;
-   --brand-700: #0f766e;
-   --brand-800: #115e59;
-   --brand-900: #134e4a;
+   /* Brand — primary blue */
+   --brand-50: #eff6ff;
+   --brand-100: #dbeafe;
+   --brand-200: #bfdbfe;
+   --brand-300: #93c5fd;
+   --brand-400: #60a5fa;
+   --brand-500: #3b82f6;
+   --brand-600: #2563eb;
+   --brand-700: #1d4ed8;
+   --brand-800: #1e40af;
+   --brand-900: #1e3a8a;
 
-   /* Accent — saffron gold */
-   --accent-50: #fffbeb;
-   --accent-100: #fef3c7;
-   --accent-200: #fde68a;
-   --accent-300: #fcd34d;
-   --accent-400: #fbbf24;
-   --accent-500: #f59e0b;
-   --accent-600: #d97706;
-   --accent-700: #b45309;
-   --accent-800: #92400e;
-   --accent-900: #78350f;
+   /* Accent — sky cyan, used for secondary emphasis only */
+   --accent-50: #f0f9ff;
+   --accent-100: #e0f2fe;
+   --accent-200: #bae6fd;
+   --accent-300: #7dd3fc;
+   --accent-400: #38bdf8;
+   --accent-500: #0ea5e9;
+   --accent-600: #0284c7;
+   --accent-700: #0369a1;
+   --accent-800: #075985;
+   --accent-900: #0c4a6e;
 
    /* Midnight navy surface ramp */
    --navy-50: #f8fafc;
@@ -195,6 +195,25 @@ body {
    -webkit-font-smoothing: antialiased;
 }
 
+::selection {
+   background: var(--brand-200);
+   color: var(--brand-900);
+}
+
+.dark ::selection {
+   background: var(--brand-800);
+   color: var(--brand-50);
+}
+
+/* Blueprint grid used behind the landing hero. Fades out toward the edges. */
+.hero-grid {
+   background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--border-strong) 40%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--border-strong) 40%, transparent) 1px, transparent 1px);
+   background-size: 64px 64px;
+   mask-image: linear-gradient(to bottom, transparent, black 10%, black 72%, transparent);
+}
+
 /* Slim, branded scrollbars used by admin lists. */
 .scrollbar-polished {
    scrollbar-width: thin;
@@ -224,16 +243,16 @@ body {
 }
 
 .dark .scrollbar-polished {
-   scrollbar-color: var(--brand-800) transparent;
+   scrollbar-color: var(--brand-500) transparent;
 }
 
 .dark .scrollbar-polished::-webkit-scrollbar-thumb {
-   background: var(--brand-400);
+   background: var(--brand-500);
    background-clip: padding-box;
 }
 
 .dark .scrollbar-polished::-webkit-scrollbar-thumb:hover {
-   background: var(--brand-300);
+   background: var(--brand-400);
    background-clip: padding-box;
 }
 

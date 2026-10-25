@@ -44,7 +44,7 @@ export default function AppShell({ user, sections, tone, title, description, chi
     )
     const heading = typeof activeLink === "object" && activeLink !== null && "label" in activeLink ? activeLink.label : title
 
-    const variantClass = tone === "admin" ? "from-accent-500 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
+    const variantClass = tone === "admin" ? "from-accent-600 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
 
     const openDrawer = () => setDrawerOpen(true)
     const closeDrawer = () => setDrawerOpen(false)
@@ -189,7 +189,7 @@ function ShieldMark() {
     return (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M12 3l7 3v6c0 4.2-3 7.5-7 9-4-1.5-7-4.8-7-9V6l7-3z" fill="white" />
-            <path d="M9.2 12.2l1.9 1.9 3.7-3.9" stroke="#b45309" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9.2 12.2l1.9 1.9 3.7-3.9" stroke="#0369a1" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     )
 }

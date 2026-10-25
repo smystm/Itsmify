@@ -19,7 +19,7 @@ export default function BrandMark({ area = "landing", onClick }: BrandMarkProps)
             <span
                 aria-hidden="true"
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-lg ${
-                    area === "admin" ? "from-accent-500 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
+                    area === "admin" ? "from-accent-600 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
                 } bg-linear-to-br`}
             >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">

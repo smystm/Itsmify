@@ -118,7 +118,7 @@ export function AvatarTile({ displayName, tone = "brand" }: { displayName: strin
         <span
             aria-hidden="true"
             className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-extrabold text-white shadow-lg ${
-                tone === "admin" ? "from-accent-500 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
+                tone === "admin" ? "from-accent-600 to-accent-700 shadow-accent-700/25" : "from-brand-600 to-brand-700 shadow-brand-700/25"
             } bg-linear-to-br`}
         >
             {initials || fa.common.fallbackInitials}

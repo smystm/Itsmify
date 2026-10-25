@@ -46,7 +46,7 @@ export default function UserMenu({ user, tone = "brand", compact = false, classN
 
     const avatarTone =
         tone === "admin"
-            ? "from-accent-500 to-accent-700 shadow-accent-700/25 text-white"
+            ? "from-accent-600 to-accent-700 shadow-accent-700/25 text-white"
             : "from-brand-600 to-brand-700 shadow-brand-700/25 text-white"
 
     const initials = displayName

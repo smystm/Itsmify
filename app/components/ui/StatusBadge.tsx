@@ -12,8 +12,8 @@ interface StatusBadgeProps {
  */
 export default function StatusBadge({ label, tone = "neutral", className = "" }: StatusBadgeProps) {
     const tones: Record<StatusTone, string> = {
-        approved: "bg-brand-500/12 text-brand-700 ring-1 ring-brand-500/25 dark:text-brand-200 dark:ring-brand-400/30",
-        pending: "bg-accent-500/15 text-accent-800 ring-1 ring-accent-500/25 dark:text-accent-200 dark:ring-accent-500/30",
+        approved: "bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-200 dark:ring-emerald-400/30",
+        pending: "bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-200 dark:ring-amber-400/30",
         rejected: "bg-red-500/12 text-red-700 ring-1 ring-red-500/25 dark:text-red-200 dark:ring-red-500/30",
         info: "bg-sky-500/12 text-sky-700 ring-1 ring-sky-500/25 dark:text-sky-200 dark:ring-sky-500/30",
         neutral: "bg-surface-muted text-navy-600 ring-1 ring-border-subtle dark:text-navy-200 dark:ring-border-subtle",

@@ -26,7 +26,7 @@ const TONES: Record<QuickActionTone, { wash: string; icon: string; cta: string; 
     },
     accent: {
         wash: "from-accent-500/[0.07] to-transparent group-hover:opacity-100",
-        icon: "from-accent-500 to-accent-700 text-white shadow-lg shadow-accent-700/25",
+        icon: "from-accent-600 to-accent-700 text-white shadow-lg shadow-accent-700/25",
         cta: "text-accent-800 dark:text-accent-200",
         borderHover: "hover:-translate-y-1 hover:border-accent-400 hover:shadow-xl hover:shadow-accent-500/10",
     },

@@ -9,7 +9,7 @@ import { fa } from "@/lib/i18n/fa"
 
 /**
  * Privileged area shell. SYS_ADMIN manages employees and accounts;
- * IT_SPECIALIST/IT_MANAGER manage assets. Same skeleton as the panel, saffron
+ * IT_SPECIALIST/IT_MANAGER manage assets. Same skeleton as the panel, sky-blue
  * accents so the privileged area reads as specially trusted at a glance. It
  * provides the same user-display context as the panel, so header identity stays
  * in lockstep with a self-profile PATCH no matter which shell is mounted.
