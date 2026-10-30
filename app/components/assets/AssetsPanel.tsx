@@ -226,7 +226,7 @@ export default function AssetsPanel({ canWrite, canDelete }: AssetsPanelProps) {
             </AdminNotice>
          ) : null}
 
-         <section className="animate-fade-in-up rounded-3xl border border-border-subtle bg-surface p-4 shadow-lg shadow-navy-900/5 dark:shadow-black/20 sm:p-5">
+         <section className="animate-fade-in-up relative z-10 rounded-3xl border border-border-subtle bg-surface p-4 shadow-lg shadow-navy-900/5 dark:shadow-black/20 sm:p-5">
             <div className="flex flex-wrap items-end gap-3">
                <div className="relative min-w-[15rem] flex-1">
                   <label htmlFor="asset-search" className="mb-1 block text-[11px] font-bold text-navy-500 dark:text-navy-400">

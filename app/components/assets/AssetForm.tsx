@@ -335,6 +335,30 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
 
                return (
                   <>
+                     {mode === "create" ? (
+                        <FormSection title={fa.assets.form.sectionAssignment} hint={fa.assets.form.sectionAssignmentHint}>
+                           <div className="grid grid-cols-1 gap-4">
+                              <div>
+                                 <p className="mb-1.5 text-sm font-bold text-navy-800 dark:text-navy-200">
+                                    {fa.assets.form.assignedTo}
+                                 </p>
+                                 <EmployeePicker
+                                    value={values.assignedToEmployeeId}
+                                    onChange={(employee) => void setFieldValue("assignedToEmployeeId", employee?.profileId ?? "")}
+                                 />
+                              </div>
+                              <TextareaField
+                                 name="assignNote"
+                                 label={fa.assets.form.assignNote}
+                                 rows={2}
+                                 placeholder={fa.assets.assign.notePlaceholder}
+                                 touched={touched.assignNote}
+                                 error={errors.assignNote}
+                              />
+                           </div>
+                        </FormSection>
+                     ) : null}
+
                      <FormSection title={fa.assets.form.sectionIdentity} hint={fa.assets.form.sectionIdentityHint}>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                            <InputField
@@ -422,30 +446,6 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                            />
                         </div>
                      </FormSection>
-
-                     {mode === "create" ? (
-                        <FormSection title={fa.assets.form.sectionAssignment} hint={fa.assets.form.sectionAssignmentHint}>
-                           <div className="grid grid-cols-1 gap-4">
-                              <div>
-                                 <p className="mb-1.5 text-sm font-bold text-navy-800 dark:text-navy-200">
-                                    {fa.assets.form.assignedTo}
-                                 </p>
-                                 <EmployeePicker
-                                    value={values.assignedToEmployeeId}
-                                    onChange={(employee) => void setFieldValue("assignedToEmployeeId", employee?.profileId ?? "")}
-                                 />
-                              </div>
-                              <TextareaField
-                                 name="assignNote"
-                                 label={fa.assets.form.assignNote}
-                                 rows={2}
-                                 placeholder={fa.assets.assign.notePlaceholder}
-                                 touched={touched.assignNote}
-                                 error={errors.assignNote}
-                              />
-                           </div>
-                        </FormSection>
-                     ) : null}
 
                      <FormSection title={fa.assets.form.sectionLocation} hint={fa.assets.form.sectionLocationHint}>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

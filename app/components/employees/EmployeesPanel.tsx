@@ -2,17 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import Link from "next/link"
-import {
-   ArrowPathIcon,
-   CheckCircleIcon,
-   KeyIcon,
-   MagnifyingGlassIcon,
-   NoSymbolIcon,
-   PencilSquareIcon,
-   PlusIcon,
-   TrashIcon,
-   UsersIcon,
-} from "@heroicons/react/24/outline"
+import { ArrowPathIcon, CheckCircleIcon, KeyIcon, MagnifyingGlassIcon, NoSymbolIcon, PencilSquareIcon, PlusIcon, TrashIcon, UsersIcon } from "@heroicons/react/24/outline"
 import PageHero from "@/app/components/ui/PageHero"
 import AdminNotice, { SkeletonBlock } from "@/app/components/ui/AdminNotice"
 import EmptyState from "@/app/components/ui/EmptyState"
@@ -121,22 +111,13 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
       return () => controller.abort()
    }, [debouncedQuery, role, status, orgUnitId, archived, page, sort, refreshKey])
 
-   const roleOptions = useMemo(
-      () => [
-         { value: "", label: fa.employees.allRoles },
-         ...ROLE_ORDER.map((item) => ({ value: item, label: fa.roles[item] ?? item })),
-      ],
-      [],
-   )
+   const roleOptions = useMemo(() => [{ value: "", label: fa.employees.allRoles }, ...ROLE_ORDER.map((item) => ({ value: item, label: fa.roles[item] ?? item }))], [])
    const statusOptions = [
       { value: "", label: fa.employees.allStatuses },
       { value: "ACTIVE", label: fa.employees.statuses.ACTIVE },
       { value: "SUSPENDED", label: fa.employees.statuses.SUSPENDED },
    ]
-   const orgUnitOptions = [
-      { value: "", label: fa.employees.allUnits },
-      ...orgUnits.map((unit) => ({ value: unit.id, label: unit.name })),
-   ]
+   const orgUnitOptions = [{ value: "", label: fa.employees.allUnits }, ...orgUnits.map((unit) => ({ value: unit.id, label: unit.name }))]
    const sortOptions = [
       { value: "newest", label: fa.employees.sortNewest },
       { value: "oldest", label: fa.employees.sortOldest },
@@ -153,10 +134,7 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
       setActionBusy(true)
       setActionError(null)
       try {
-         const result = await postJson<{ username: string; password: string }>(
-            `/api/admin/users/${resetting.id}/password`,
-            {},
-         )
+         const result = await postJson<{ username: string; password: string }>(`/api/admin/users/${resetting.id}/password`, {})
          setResetting(null)
          setGenerated({ username: result.username, password: result.password })
          setNotice(fa.employees.profile.resetDone)
@@ -176,11 +154,7 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
             status: statusTarget.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE",
          })
          setStatusTarget(null)
-         setNotice(
-            statusTarget.status === "ACTIVE"
-               ? fa.employees.profile.statusChangeDoneSuspended
-               : fa.employees.profile.statusChangeDoneActive,
-         )
+         setNotice(statusTarget.status === "ACTIVE" ? fa.employees.profile.statusChangeDoneSuspended : fa.employees.profile.statusChangeDoneActive)
          refresh()
       } catch (err) {
          setActionError(employeeActionError(err))
@@ -205,10 +179,7 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
       }
    }
 
-   const totalLabel = fa.employees.totalCount.replace(
-      "{count}",
-      (data?.total ?? 0).toLocaleString("fa-IR"),
-   )
+   const totalLabel = fa.employees.totalCount.replace("{count}", (data?.total ?? 0).toLocaleString("fa-IR"))
 
    return (
       <div className="space-y-6">
@@ -242,32 +213,63 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
             </AdminNotice>
          ) : null}
 
-         <section className="animate-fade-in-up rounded-3xl border border-border-subtle bg-surface p-4 shadow-lg shadow-navy-900/5 dark:shadow-black/20 sm:p-5">
+         <section className="animate-fade-in-up relative z-10 rounded-3xl border border-border-subtle bg-surface p-4 shadow-lg shadow-navy-900/5 dark:shadow-black/20 sm:p-5">
             <div className="flex flex-wrap items-end gap-3">
                <div className="relative min-w-[15rem] flex-1">
-                  <span
-                     aria-hidden="true"
-                     className="pointer-events-none absolute inset-y-0 start-3 flex w-6 items-center justify-center text-navy-500"
-                  >
-                     <MagnifyingGlassIcon className="h-5 w-5" />
-                  </span>
                   <label htmlFor="employee-search" className="mb-1 block text-[11px] font-bold text-navy-500 dark:text-navy-400">
                      {fa.common.search}
                   </label>
-                  <input
-                     id="employee-search"
-                     type="search"
-                     value={query}
-                     onChange={(event) => setQuery(event.target.value)}
-                     placeholder={fa.employees.searchPlaceholder}
-                     className="w-full rounded-full border border-border-subtle bg-surface px-4 pe-11 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
-                  />
+                  <div className="relative">
+                     <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 start-3 flex w-6 items-center justify-center text-navy-500">
+                        <MagnifyingGlassIcon className="h-5 w-5" />
+                     </span>
+                     <input
+                        id="employee-search"
+                        type="search"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={fa.employees.searchPlaceholder}
+                        className="w-full rounded-full border border-border-subtle bg-surface px-4 ps-10 py-2.5 text-sm font-medium text-navy-800 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
+                     />
+                  </div>
                </div>
 
-               <FilterSelect label={fa.employees.columns.role} value={role} onChange={(value) => { setRole(value); setPage(1) }} options={roleOptions} />
-               <FilterSelect label={fa.employees.columns.status} value={status} onChange={(value) => { setStatus(value); setPage(1) }} options={statusOptions} />
-               <FilterSelect label={fa.employees.columns.orgUnit} value={orgUnitId} onChange={(value) => { setOrgUnitId(value); setPage(1) }} options={orgUnitOptions} />
-               <FilterSelect label={fa.employees.sortLabel} value={sort} onChange={(value) => { setSort(value); setPage(1) }} options={sortOptions} />
+               <FilterSelect
+                  label={fa.employees.columns.role}
+                  value={role}
+                  onChange={(value) => {
+                     setRole(value)
+                     setPage(1)
+                  }}
+                  options={roleOptions}
+               />
+               <FilterSelect
+                  label={fa.employees.columns.status}
+                  value={status}
+                  onChange={(value) => {
+                     setStatus(value)
+                     setPage(1)
+                  }}
+                  options={statusOptions}
+               />
+               <FilterSelect
+                  label={fa.employees.columns.orgUnit}
+                  value={orgUnitId}
+                  onChange={(value) => {
+                     setOrgUnitId(value)
+                     setPage(1)
+                  }}
+                  options={orgUnitOptions}
+               />
+               <FilterSelect
+                  label={fa.employees.sortLabel}
+                  value={sort}
+                  onChange={(value) => {
+                     setSort(value)
+                     setPage(1)
+                  }}
+                  options={sortOptions}
+               />
 
                <button
                   type="button"
@@ -314,20 +316,8 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
          {!loading && data && data.employees.length === 0 ? (
             <EmptyState
                icon={<UsersIcon className="h-6 w-6" />}
-               title={
-                  archived
-                     ? fa.employees.archivedEmptyTitle
-                     : debouncedQuery || role || status || orgUnitId
-                       ? fa.employees.searchEmptyTitle
-                       : fa.employees.emptyTitle
-               }
-               body={
-                  archived
-                     ? fa.employees.archivedEmptyBody
-                     : debouncedQuery || role || status || orgUnitId
-                       ? fa.employees.searchEmptyBody
-                       : fa.employees.emptyBody
-               }
+               title={archived ? fa.employees.archivedEmptyTitle : debouncedQuery || role || status || orgUnitId ? fa.employees.searchEmptyTitle : fa.employees.emptyTitle}
+               body={archived ? fa.employees.archivedEmptyBody : debouncedQuery || role || status || orgUnitId ? fa.employees.searchEmptyBody : fa.employees.emptyBody}
                action={!archived ? { label: fa.employees.newEmployee, href: "/admin/employees/new" } : undefined}
                tone="brand"
             />
@@ -356,9 +346,18 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
                                  employee={employee}
                                  isSelf={employee.id === currentUserId}
                                  archived={archived}
-                                 onReset={() => { setActionError(null); setResetting(employee) }}
-                                 onStatus={() => { setActionError(null); setStatusTarget(employee) }}
-                                 onDelete={() => { setActionError(null); setDeleting(employee) }}
+                                 onReset={() => {
+                                    setActionError(null)
+                                    setResetting(employee)
+                                 }}
+                                 onStatus={() => {
+                                    setActionError(null)
+                                    setStatusTarget(employee)
+                                 }}
+                                 onDelete={() => {
+                                    setActionError(null)
+                                    setDeleting(employee)
+                                 }}
                               />
                            ))}
                         </tbody>
@@ -373,19 +372,23 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
                         employee={employee}
                         isSelf={employee.id === currentUserId}
                         archived={archived}
-                        onReset={() => { setActionError(null); setResetting(employee) }}
-                        onStatus={() => { setActionError(null); setStatusTarget(employee) }}
-                        onDelete={() => { setActionError(null); setDeleting(employee) }}
+                        onReset={() => {
+                           setActionError(null)
+                           setResetting(employee)
+                        }}
+                        onStatus={() => {
+                           setActionError(null)
+                           setStatusTarget(employee)
+                        }}
+                        onDelete={() => {
+                           setActionError(null)
+                           setDeleting(employee)
+                        }}
                      />
                   ))}
                </div>
 
-               <Pagination
-                  page={data.page}
-                  totalPages={data.totalPages}
-                  onPage={(next) => setPage(next)}
-                  disabled={loading}
-               />
+               <Pagination page={data.page} totalPages={data.totalPages} onPage={(next) => setPage(next)} disabled={loading} />
             </>
          ) : null}
 
@@ -404,9 +407,7 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
             <ConfirmDialog
                title={fa.employees.profile.statusChangeTitle}
                body={fa.employees.profile.statusChangeBody.replace("{name}", displayName(statusTarget))}
-               confirmLabel={
-                  statusTarget.status === "ACTIVE" ? fa.employees.profile.suspend : fa.employees.profile.activate
-               }
+               confirmLabel={statusTarget.status === "ACTIVE" ? fa.employees.profile.suspend : fa.employees.profile.activate}
                busy={actionBusy}
                destructive={statusTarget.status === "ACTIVE"}
                onClose={() => setStatusTarget(null)}
@@ -426,13 +427,7 @@ export default function EmployeesPanel({ currentUserId }: EmployeesPanelProps) {
             />
          ) : null}
 
-         {generated ? (
-            <GeneratedPasswordDialog
-               username={generated.username}
-               password={generated.password}
-               onClose={() => setGenerated(null)}
-            />
-         ) : null}
+         {generated ? <GeneratedPasswordDialog username={generated.username} password={generated.password} onClose={() => setGenerated(null)} /> : null}
       </div>
    )
 }
@@ -480,7 +475,7 @@ function EmployeeTableRow({
    onDelete: () => void
 }) {
    return (
-      <tr className="transition-colors hover:bg-surface-muted/50 dark:hover:bg-navy-900/30">
+      <tr className="transition-colors hover:bg-surface-muted/50 dark:hover:bg-navy-900/30 px-10">
          <td className="px-5 py-4">
             <div className="flex items-center gap-3">
                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-500/12 text-sm font-extrabold text-brand-700 dark:bg-brand-500/15 dark:text-brand-200">
@@ -513,20 +508,27 @@ function EmployeeTableRow({
             </span>
          </td>
          <td className="px-4 py-4">
-            <StatusBadge
-               tone={employee.status === "ACTIVE" ? "approved" : "rejected"}
-               label={fa.employees.statuses[employee.status] ?? employee.status}
-            />
+            <StatusBadge tone={employee.status === "ACTIVE" ? "approved" : "rejected"} label={fa.employees.statuses[employee.status] ?? employee.status} />
          </td>
          <td className="px-4 py-4 text-xs text-navy-600 dark:text-navy-300">{formatDate(employee.lastLoginAt)}</td>
          <td className="px-5 py-4">
             <div className="flex items-center justify-end gap-1.5">
-               <Link href={`/admin/employees/${employee.id}`} className="rounded-full border border-border-subtle p-2 text-navy-600 transition-colors hover:border-brand-400 hover:text-brand-700 dark:border-navy-700 dark:text-navy-300" aria-label={fa.employees.columns.employee} title={fa.employees.columns.employee}>
+               <Link
+                  href={`/admin/employees/${employee.id}`}
+                  className="rounded-full border border-border-subtle p-2 text-navy-600 transition-colors hover:border-brand-400 hover:text-brand-700 dark:border-navy-700 dark:text-navy-300"
+                  aria-label={fa.employees.columns.employee}
+                  title={fa.employees.columns.employee}
+               >
                   <UsersIcon className="h-4 w-4" aria-hidden="true" />
                </Link>
                {!archived ? (
                   <>
-                     <Link href={`/admin/employees/${employee.id}/edit`} className="rounded-full border border-border-subtle p-2 text-navy-600 transition-colors hover:border-brand-400 hover:text-brand-700 dark:border-navy-700 dark:text-navy-300" aria-label={fa.employees.editEmployee} title={fa.employees.editEmployee}>
+                     <Link
+                        href={`/admin/employees/${employee.id}/edit`}
+                        className="rounded-full border border-border-subtle p-2 text-navy-600 transition-colors hover:border-brand-400 hover:text-brand-700 dark:border-navy-700 dark:text-navy-300"
+                        aria-label={fa.employees.editEmployee}
+                        title={fa.employees.editEmployee}
+                     >
                         <PencilSquareIcon className="h-4 w-4" aria-hidden="true" />
                      </Link>
                      <RowIcon label={fa.employees.profile.resetPassword} onClick={onReset} disabled={isSelf} tone="neutral">
@@ -577,7 +579,9 @@ function EmployeeCard({
                   <Link href={`/admin/employees/${employee.id}`} className="truncate font-extrabold text-navy-950 hover:text-brand-700 dark:text-white dark:hover:text-brand-200">
                      {displayName(employee)}
                   </Link>
-                  <p dir="ltr" className="mt-0.5 truncate text-xs text-navy-500 dark:text-navy-400">{employee.username}</p>
+                  <p dir="ltr" className="mt-0.5 truncate text-xs text-navy-500 dark:text-navy-400">
+                     {employee.username}
+                  </p>
                </div>
             </div>
             <StatusBadge tone={employee.status === "ACTIVE" ? "approved" : "rejected"} label={fa.employees.statuses[employee.status] ?? employee.status} />
@@ -603,23 +607,41 @@ function EmployeeCard({
          </dl>
 
          <div className="mt-4 flex flex-wrap gap-2 border-t border-border-subtle pt-3">
-            <Link href={`/admin/employees/${employee.id}`} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+            <Link
+               href={`/admin/employees/${employee.id}`}
+               className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+            >
                {fa.employees.columns.employee}
             </Link>
             {!archived ? (
                <>
-                  <Link href={`/admin/employees/${employee.id}/edit`} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+                  <Link
+                     href={`/admin/employees/${employee.id}/edit`}
+                     className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+                  >
                      {fa.common.edit}
                   </Link>
                   {!isSelf ? (
                      <>
-                        <button type="button" onClick={onReset} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+                        <button
+                           type="button"
+                           onClick={onReset}
+                           className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+                        >
                            {fa.employees.profile.resetPassword}
                         </button>
-                        <button type="button" onClick={onStatus} className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200">
+                        <button
+                           type="button"
+                           onClick={onStatus}
+                           className="rounded-full border border-border-subtle px-3 py-1.5 text-xs font-bold text-navy-700 dark:border-navy-700 dark:text-navy-200"
+                        >
                            {employee.status === "ACTIVE" ? fa.employees.profile.suspend : fa.employees.profile.activate}
                         </button>
-                        <button type="button" onClick={onDelete} className="rounded-full border border-red-300 px-3 py-1.5 text-xs font-bold text-red-700 dark:border-red-500/40 dark:text-red-200">
+                        <button
+                           type="button"
+                           onClick={onDelete}
+                           className="rounded-full border border-red-300 px-3 py-1.5 text-xs font-bold text-red-700 dark:border-red-500/40 dark:text-red-200"
+                        >
                            {fa.common.delete}
                         </button>
                      </>
@@ -668,9 +690,7 @@ function TinyBadge({ children, tone }: { children: ReactNode; tone: "accent" | "
    return (
       <span
          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-            tone === "accent"
-               ? "bg-accent-500/15 text-accent-800 dark:text-accent-100"
-               : "bg-red-500/12 text-red-700 dark:text-red-200"
+            tone === "accent" ? "bg-accent-500/15 text-accent-800 dark:text-accent-100" : "bg-red-500/12 text-red-700 dark:text-red-200"
          }`}
       >
          {children}
