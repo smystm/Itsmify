@@ -9,6 +9,7 @@ import { FormShell } from "@/app/components/auth/FormShell"
 import PageHero from "@/app/components/ui/PageHero"
 import FormSection from "@/app/components/ui/FormSection"
 import InputField from "@/app/components/ui/InputField"
+import JalaliDateField from "@/app/components/ui/JalaliDateField"
 import SelectField from "@/app/components/ui/SelectField"
 import TextareaField from "@/app/components/ui/TextareaField"
 import CheckboxField from "@/app/components/ui/CheckboxField"
@@ -526,7 +527,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                        <SelectField name="computer.osName" label={fa.assets.fields.osName} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_NAME", initialValues.computer.osName)} touched={computerTouched.osName} error={computerErrors.osName} />
                                        <SelectField name="computer.osEdition" label={fa.assets.fields.osEdition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_EDITION", initialValues.computer.osEdition)} touched={computerTouched.osEdition} error={computerErrors.osEdition} />
                                        <InputField name="computer.osVersion" label={fa.assets.fields.osVersion} touched={computerTouched.osVersion} error={computerErrors.osVersion} />
-                                       <InputField name="computer.osInstalledOn" label={fa.assets.fields.osInstalledOn} type="date" dir="ltr" touched={computerTouched.osInstalledOn} error={computerErrors.osInstalledOn} />
+                                       <JalaliDateField name="computer.osInstalledOn" label={fa.assets.fields.osInstalledOn} touched={computerTouched.osInstalledOn} error={computerErrors.osInstalledOn} />
                                        <InputField name="computer.osBuild" label={fa.assets.fields.osBuild} touched={computerTouched.osBuild} error={computerErrors.osBuild} />
                                        <SelectField name="computer.officeVersion" label={fa.assets.fields.officeVersion} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OFFICE_VERSION", initialValues.computer.officeVersion)} touched={computerTouched.officeVersion} error={computerErrors.officeVersion} />
                                        <InputField name="computer.systemUsername" label={fa.assets.fields.systemUsername} dir="ltr" touched={computerTouched.systemUsername} error={computerErrors.systemUsername} />
@@ -596,8 +597,8 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                     <SelectField name="software.edition" label={fa.assets.fields.edition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SOFTWARE_EDITION", initialValues.software.edition)} touched={softwareTouched.edition} error={softwareErrors.edition} />
                                     <SelectField name="software.licenseType" label={fa.assets.fields.licenseType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("LICENSE_TYPE", initialValues.software.licenseType)} touched={softwareTouched.licenseType} error={softwareErrors.licenseType} />
                                     <InputField name="software.seatCount" label={fa.assets.fields.seatCount} type="number" step="1" inputMode="numeric" touched={softwareTouched.seatCount} error={softwareErrors.seatCount} />
-                                    <InputField name="software.licenseExpiry" label={fa.assets.fields.licenseExpiry} type="date" dir="ltr" touched={softwareTouched.licenseExpiry} error={softwareErrors.licenseExpiry} />
-                                    <InputField name="software.installedOn" label={fa.assets.fields.installedOn} type="date" dir="ltr" touched={softwareTouched.installedOn} error={softwareErrors.installedOn} />
+                                    <JalaliDateField name="software.licenseExpiry" label={fa.assets.fields.licenseExpiry} touched={softwareTouched.licenseExpiry} error={softwareErrors.licenseExpiry} />
+                                    <JalaliDateField name="software.installedOn" label={fa.assets.fields.installedOn} touched={softwareTouched.installedOn} error={softwareErrors.installedOn} />
                                  </div>
                               </div>
                            ) : null}

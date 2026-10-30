@@ -35,7 +35,9 @@ import Button from "@/app/components/ui/Button"
 import AdminNotice from "@/app/components/ui/AdminNotice"
 import { FormShell } from "@/app/components/auth/FormShell"
 import { useUserDisplaySetter } from "@/app/components/layout/UserDisplayContext"
+import AssignedAssetsList from "./AssignedAssetsList"
 import { postJson, ApiError } from "@/app/helpers/API"
+import { can } from "@/lib/auth/permissions"
 import { isValidPhone, normalizePhone } from "@/lib/auth/phone"
 import { formatJalaliDate } from "@/lib/date/jalali"
 import { fa } from "@/lib/i18n/fa"
@@ -442,77 +444,10 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
                         </div>
                      </div>
 
-                     {profile.assignedAssets.length === 0 ? (
-                        <div className="mt-6">
-                           <EmptyState
-                              icon={<ComputerDesktopIcon className="h-6 w-6" />}
-                              title={fa.profile.assetsEmptyTitle}
-                              body={fa.profile.assetsEmptyBody}
-                              tone="accent"
-                           />
-                        </div>
-                     ) : (
-                        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                           {profile.assignedAssets.map((assignment) => {
-                              const content = (
-                                 <>
-                                    <div className="flex flex-wrap items-start justify-between gap-2">
-                                       <div className="min-w-0">
-                                          <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">
-                                             {assignment.asset.name}
-                                          </p>
-                                          <p dir="ltr" className="mt-0.5 font-mono text-[11px] text-brand-700 dark:text-brand-200">
-                                             {assignment.asset.assetCode}
-                                          </p>
-                                       </div>
-                                       <StatusBadge
-                                          tone={
-                                             assignment.asset.status === "ACTIVE"
-                                                ? "approved"
-                                                : assignment.asset.status === "IN_REPAIR"
-                                                  ? "pending"
-                                                  : assignment.asset.status === "LOST"
-                                                    ? "rejected"
-                                                    : "neutral"
-                                          }
-                                          label={fa.assets.statuses[assignment.asset.status] ?? assignment.asset.status}
-                                       />
-                                    </div>
-                                    <p className="mt-2 text-xs text-navy-600 dark:text-navy-300">
-                                       {fa.assets.categories[assignment.asset.category] ?? assignment.asset.category}
-                                       {" · "}
-                                       {fa.assets.types[assignment.asset.type] ?? assignment.asset.type}
-                                    </p>
-                                    <p className="mt-1 text-[11px] text-navy-500 dark:text-navy-400">
-                                       {fa.profile.assignedAt}: {formatJalaliDate(assignment.assignedAt)}
-                                    </p>
-                                    {assignment.note ? (
-                                       <p className="mt-2 rounded-xl bg-surface-muted/70 px-3 py-2 text-[11px] leading-6 text-navy-600 dark:bg-navy-800/60 dark:text-navy-300">
-                                          {assignment.note}
-                                       </p>
-                                    ) : null}
-                                 </>
-                              )
-
-                              return (
-                                 <li key={assignment.assignmentId}>
-                                    {profile.role === "EMPLOYEE" ? (
-                                       <div className="h-full rounded-2xl border border-border-subtle p-4">
-                                          {content}
-                                       </div>
-                                    ) : (
-                                       <Link
-                                          href={`/admin/assets/${assignment.asset.id}`}
-                                          className="block h-full rounded-2xl border border-border-subtle p-4 transition-colors hover:border-brand-400 dark:border-navy-700"
-                                       >
-                                          {content}
-                                       </Link>
-                                    )}
-                                 </li>
-                              )
-                           })}
-                        </ul>
-                     )}
+                     <AssignedAssetsList
+                        assignments={profile.assignedAssets}
+                        canOpenAdminDetail={can(profile.role, "equipment.read")}
+                     />
                   </section>
                </TabsContent>
 

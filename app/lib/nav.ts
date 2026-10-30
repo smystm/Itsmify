@@ -35,54 +35,49 @@ export interface NavSection {
 }
 
 export function panelNavSections(user: SessionUser): NavSection[] {
+    const mainItems: NavItem[] = [
+        {
+            kind: "link",
+            href: "/panel",
+            label: fa.nav.panel,
+            icon: "overview",
+            exact: true,
+        },
+        {
+            kind: "link",
+            href: "/panel/profile",
+            label: fa.nav.profile,
+            icon: "profile",
+        },
+    ]
+
+    // The panel sidebar always opens the personal view. The full inventory
+    // stays in the admin workspace for roles that hold equipment.read.
+    const roadmapItems: NavItem[] = [
+        {
+            kind: "placeholder",
+            label: fa.nav.tickets,
+            icon: "tickets",
+            badge: fa.common.comingSoon,
+        },
+        {
+            kind: "link",
+            href: "/panel/assets",
+            label: fa.nav.assets,
+            icon: "equipment",
+        },
+    ]
+
     const sections: NavSection[] = [
         {
             id: "main",
             heading: fa.nav.groupMain,
-            items: [
-                {
-                    kind: "link",
-                    href: "/panel",
-                    label: fa.nav.panel,
-                    icon: "overview",
-                    exact: true,
-                },
-                {
-                    kind: "link",
-                    href: "/panel/profile",
-                    label: fa.nav.profile,
-                    icon: "profile",
-                },
-            ],
+            items: mainItems,
         },
         {
             id: "roadmap",
             heading: fa.nav.groupRoadmap,
-            items: [
-                {
-                    kind: "placeholder",
-                    label: fa.nav.tickets,
-                    icon: "tickets",
-                    badge: fa.common.comingSoon,
-                },
-                ...(can(user.role, "equipment.read")
-                    ? ([
-                         {
-                             kind: "link",
-                             href: "/admin/assets",
-                             label: fa.nav.assets,
-                             icon: "equipment",
-                         },
-                      ] satisfies NavItem[])
-                    : ([
-                         {
-                             kind: "placeholder",
-                             label: fa.nav.equipment,
-                             icon: "equipment",
-                             badge: fa.common.comingSoon,
-                         },
-                      ] satisfies NavItem[])),
-            ],
+            items: roadmapItems,
         },
     ]
 

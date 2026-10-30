@@ -38,6 +38,7 @@ const EMPLOYEE_ACTIONS = [
    "profile.read.own",
    "profile.phone.change",
    "profile.password.change",
+   "equipment.read.own",
 ] as const
 
 const SPECIALIST_ACTIONS = [
@@ -96,6 +97,7 @@ export function can(role: Role | undefined | null, action: Action): boolean {
       case "profile.read.own":
       case "profile.phone.change":
       case "profile.password.change":
+      case "equipment.read.own":
          return true // every role, including EMPLOYEE
       case "panel.it":
       case "equipment.read":

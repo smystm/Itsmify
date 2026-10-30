@@ -9,6 +9,7 @@ import { FormShell } from "@/app/components/auth/FormShell"
 import PageHero from "@/app/components/ui/PageHero"
 import FormSection from "@/app/components/ui/FormSection"
 import InputField from "@/app/components/ui/InputField"
+import JalaliDateField from "@/app/components/ui/JalaliDateField"
 import PasswordField from "@/app/components/ui/PasswordField"
 import SelectField from "@/app/components/ui/SelectField"
 import TextareaField from "@/app/components/ui/TextareaField"
@@ -316,11 +317,9 @@ export default function EmployeeForm({ mode, employee, isSelf = false }: Employe
                            touched={touched.employmentType}
                            error={errors.employmentType}
                         />
-                        <InputField
+                        <JalaliDateField
                            name="hireDate"
                            label={fa.employees.form.hireDate}
-                           type="date"
-                           dir="ltr"
                            touched={touched.hireDate}
                            error={errors.hireDate}
                         />
