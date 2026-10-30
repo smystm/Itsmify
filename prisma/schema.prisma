@@ -404,6 +404,49 @@ model Asset {
   @@map("assets")
 }
 
+/// Fields in the asset form whose values are picked from an admin-managed
+/// list. One enum value per dropdown; the Contract Builder screen groups them.
+enum ContractOptionKind {
+  BRAND
+  SYSTEM_TYPE
+  MOTHERBOARD_BRAND
+  CPU_TIER
+  RAM_TYPE
+  GPU_TYPE
+  GPU_BRAND
+  CASE_BRAND
+  PSU_BRAND
+  SPEAKER_TYPE
+  OS_NAME
+  OS_EDITION
+  OFFICE_VERSION
+  PANEL_TYPE
+  RESOLUTION
+  CONNECTION_TYPE
+  PRINTER_TYPE
+  NETWORK_TYPE
+  SOFTWARE_VENDOR
+  LICENSE_TYPE
+  SOFTWARE_EDITION
+}
+
+/// One selectable value for a contract-managed asset field. `nameKey` is the
+/// trimmed, lowercased name, so "HP" and "hp" cannot both exist in a list.
+model ContractOption {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  kind    ContractOptionKind
+  name    String
+  nameKey String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, nameKey])
+  @@index([kind])
+  @@map("contract_options")
+}
+
 model ComputerDetail {
   assetId String @id @db.Uuid
 

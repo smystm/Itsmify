@@ -45,7 +45,6 @@ export default function SelectField({
          <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
             {label}
          </label>
-         {hint && !hasError ? <p className="mb-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
          <Field
             as="select"
             id={name}

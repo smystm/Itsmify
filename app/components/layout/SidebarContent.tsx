@@ -24,6 +24,7 @@ const ICON_TONES: Record<NavIcon, string> = {
     overview: "bg-blue-500/12 text-blue-600 dark:bg-blue-400/15 dark:text-blue-300",
     users: "bg-violet-500/12 text-violet-600 dark:bg-violet-400/15 dark:text-violet-300",
     equipment: "bg-emerald-500/12 text-emerald-600 dark:bg-emerald-400/15 dark:text-emerald-300",
+    contract: "bg-cyan-500/12 text-cyan-600 dark:bg-cyan-400/15 dark:text-cyan-300",
     profile: "bg-sky-500/12 text-sky-600 dark:bg-sky-400/15 dark:text-sky-300",
     security: "bg-amber-500/12 text-amber-600 dark:bg-amber-400/15 dark:text-amber-300",
     tickets: "bg-rose-500/12 text-rose-600 dark:bg-rose-400/15 dark:text-rose-300",
@@ -163,6 +164,7 @@ function NavIconGlyph({ icon }: { icon: NavIcon }) {
     if (icon === "users") return <UsersGlyphIcon />
     if (icon === "tickets") return <TicketIcon />
     if (icon === "equipment") return <EquipmentIcon />
+    if (icon === "contract") return <ContractIcon />
     if (icon === "security") return <ShieldIcon />
     if (icon === "home") return <HomeIcon />
     return <UserCircleIcon />
@@ -205,6 +207,17 @@ function EquipmentIcon() {
             <rect x="3.5" y="6.5" width="17" height="9" rx="2" />
             <path d="M12 18.5a3.5 3.5 0 0 0 0 7" />
             <path d="M12 21.5h.02" />
+        </svg>
+    )
+}
+
+function ContractIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 3.5h7l4 4v13H7z" />
+            <path d="M14 3.5v4h4" />
+            <path d="M9.5 12h5" />
+            <path d="M9.5 15.5h5" />
         </svg>
     )
 }

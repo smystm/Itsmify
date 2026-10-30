@@ -78,6 +78,7 @@ export type Action =
    | "admin.users.update"
    | "admin.users.delete"
    | "admin.users.password"
+   | "equipment.options.manage"
 
 /**
  * What the signed-in user may do, in one call. Route handlers ask this FIRST,
@@ -111,6 +112,7 @@ export function can(role: Role | undefined | null, action: Action): boolean {
       case "equipment.delete":
       case "activity.read":
          return role === ROLES.IT_MANAGER
+      case "equipment.options.manage":
       case "admin.users.create":
       case "admin.users.read":
       case "admin.users.update":

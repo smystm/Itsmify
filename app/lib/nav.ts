@@ -7,7 +7,7 @@ import type { SessionUser } from "@/lib/auth/session"
  * referenced by a small union — keeping React out of this module lets both
  * server and client components read the same navigation definition.
  */
-export type NavIcon = "overview" | "users" | "profile" | "security" | "tickets" | "equipment" | "home"
+export type NavIcon = "overview" | "users" | "profile" | "security" | "tickets" | "equipment" | "contract" | "home"
 
 export interface NavLinkItem {
     kind: "link"
@@ -128,6 +128,14 @@ export function adminNavSections(user: SessionUser): NavSection[] {
             href: "/admin/assets",
             label: fa.nav.assets,
             icon: "equipment",
+        })
+    }
+    if (can(user.role, "equipment.options.manage")) {
+        managementItems.push({
+            kind: "link",
+            href: "/admin/contract-builder",
+            label: fa.nav.contractBuilder,
+            icon: "contract",
         })
     }
 

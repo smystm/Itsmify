@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline"
-import type { FormikHelpers } from "formik"
+import type { FormikErrors, FormikHelpers } from "formik"
 import { FormShell } from "@/app/components/auth/FormShell"
 import PageHero from "@/app/components/ui/PageHero"
 import FormSection from "@/app/components/ui/FormSection"
@@ -24,6 +24,8 @@ import {
    type AssetCategoryValue,
 } from "@/lib/assets/validation"
 import type { AssetDetailDto } from "@/lib/assets/types"
+import type { ContractOptionKind } from "@/lib/contracts/kinds"
+import type { ContractOptionsByKind } from "@/lib/contracts/types"
 
 interface ComputerValues {
    systemType: string
@@ -114,6 +116,7 @@ interface AssetFormValues {
 interface AssetFormProps {
    mode: "create" | "edit"
    asset?: AssetDetailDto
+   options: ContractOptionsByKind
 }
 
 const PERIPHERAL_TYPES = [
@@ -135,9 +138,34 @@ function isoDate(value: string | null | undefined): string {
    return value ? value.slice(0, 10) : ""
 }
 
-export default function AssetForm({ mode, asset }: AssetFormProps) {
+function nestFieldErrors(errors: Record<string, string>): Record<string, unknown> {
+   const nested: Record<string, unknown> = {}
+   for (const [path, message] of Object.entries(errors)) {
+      const parts = path.split(".")
+      let cursor = nested
+      for (const part of parts.slice(0, -1)) {
+         if (typeof cursor[part] !== "object" || cursor[part] === null) cursor[part] = {}
+         cursor = cursor[part] as Record<string, unknown>
+      }
+      cursor[parts[parts.length - 1]] = message
+   }
+   return nested
+}
+
+export default function AssetForm({ mode, asset, options }: AssetFormProps) {
    const router = useRouter()
    const [formError, setFormError] = useState<string | null>(null)
+
+   const currentBrand = asset?.brand?.trim() ?? ""
+   const contractOptions = (kind: ContractOptionKind, current: string) => {
+      const value = current.trim()
+      const list = options[kind].map((option) => ({ value: option.name, label: option.name }))
+      if (value && !options[kind].some((option) => option.name.toLowerCase() === value.toLowerCase())) {
+         list.unshift({ value, label: `${value}${fa.assets.form.legacySuffix}` })
+      }
+      return list
+   }
+   const brandOptions = contractOptions("BRAND", currentBrand)
 
    const initialValues: AssetFormValues = {
       assetCode: asset?.assetCode ?? "",
@@ -145,7 +173,7 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
       category: asset?.category ?? "",
       type: asset?.type ?? "",
       status: asset?.status ?? "ACTIVE",
-      brand: asset?.brand ?? "",
+      brand: currentBrand,
       model: asset?.model ?? "",
       serialNumber: asset?.serialNumber ?? "",
       orgUnitName: asset?.orgUnit?.name ?? "",
@@ -244,7 +272,7 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
       } catch (err) {
          if (err instanceof ApiError) {
             if (err.errors && Object.keys(err.errors).length > 0) {
-               helpers.setErrors(err.errors)
+               helpers.setErrors(nestFieldErrors(err.errors) as FormikErrors<AssetFormValues>)
                setFormError(fa.assets.form.formError)
             } else if (err.code === "invalid_category") {
                setFormError(fa.assets.form.invalidTypeCategory)
@@ -326,10 +354,12 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                               touched={touched.assetCode}
                               error={errors.assetCode}
                            />
-                           <InputField
+                           <SelectField
                               name="brand"
                               label={fa.assets.form.brand}
                               placeholder={fa.assets.form.brandPlaceholder}
+                              hint={fa.assets.form.contractHint}
+                              options={brandOptions}
                               touched={touched.brand}
                               error={errors.brand}
                            />
@@ -463,23 +493,23 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                        {fa.assets.form.hardwareDetails}
                                     </h3>
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                       <InputField name="computer.systemType" label={fa.assets.fields.systemType} touched={computerTouched.systemType} error={computerErrors.systemType} />
-                                       <InputField name="computer.motherboardBrand" label={fa.assets.fields.motherboardBrand} touched={computerTouched.motherboardBrand} error={computerErrors.motherboardBrand} />
+                                       <SelectField name="computer.systemType" label={fa.assets.fields.systemType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SYSTEM_TYPE", initialValues.computer.systemType)} touched={computerTouched.systemType} error={computerErrors.systemType} />
+                                       <SelectField name="computer.motherboardBrand" label={fa.assets.fields.motherboardBrand} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("MOTHERBOARD_BRAND", initialValues.computer.motherboardBrand)} touched={computerTouched.motherboardBrand} error={computerErrors.motherboardBrand} />
                                        <InputField name="computer.motherboardModel" label={fa.assets.fields.motherboardModel} touched={computerTouched.motherboardModel} error={computerErrors.motherboardModel} />
-                                       <InputField name="computer.cpuTier" label={fa.assets.fields.cpuTier} touched={computerTouched.cpuTier} error={computerErrors.cpuTier} />
+                                       <SelectField name="computer.cpuTier" label={fa.assets.fields.cpuTier} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("CPU_TIER", initialValues.computer.cpuTier)} touched={computerTouched.cpuTier} error={computerErrors.cpuTier} />
                                        <InputField name="computer.cpuModel" label={fa.assets.fields.cpuModel} touched={computerTouched.cpuModel} error={computerErrors.cpuModel} />
                                        <InputField name="computer.ramAmountGb" label={fa.assets.fields.ramAmountGb} type="number" step="any" inputMode="decimal" touched={computerTouched.ramAmountGb} error={computerErrors.ramAmountGb} />
-                                       <InputField name="computer.ramType" label={fa.assets.fields.ramType} touched={computerTouched.ramType} error={computerErrors.ramType} />
+                                       <SelectField name="computer.ramType" label={fa.assets.fields.ramType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("RAM_TYPE", initialValues.computer.ramType)} touched={computerTouched.ramType} error={computerErrors.ramType} />
                                        <InputField name="computer.storageInfo" label={fa.assets.fields.storageInfo} touched={computerTouched.storageInfo} error={computerErrors.storageInfo} />
-                                       <InputField name="computer.gpuType" label={fa.assets.fields.gpuType} touched={computerTouched.gpuType} error={computerErrors.gpuType} />
-                                       <InputField name="computer.gpuBrand" label={fa.assets.fields.gpuBrand} touched={computerTouched.gpuBrand} error={computerErrors.gpuBrand} />
+                                       <SelectField name="computer.gpuType" label={fa.assets.fields.gpuType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("GPU_TYPE", initialValues.computer.gpuType)} touched={computerTouched.gpuType} error={computerErrors.gpuType} />
+                                       <SelectField name="computer.gpuBrand" label={fa.assets.fields.gpuBrand} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("GPU_BRAND", initialValues.computer.gpuBrand)} touched={computerTouched.gpuBrand} error={computerErrors.gpuBrand} />
                                        <InputField name="computer.gpuModel" label={fa.assets.fields.gpuModel} touched={computerTouched.gpuModel} error={computerErrors.gpuModel} />
                                        <InputField name="computer.gpuMemoryMb" label={fa.assets.fields.gpuMemoryMb} type="number" step="1" inputMode="numeric" touched={computerTouched.gpuMemoryMb} error={computerErrors.gpuMemoryMb} />
-                                       <InputField name="computer.caseBrand" label={fa.assets.fields.caseBrand} touched={computerTouched.caseBrand} error={computerErrors.caseBrand} />
+                                       <SelectField name="computer.caseBrand" label={fa.assets.fields.caseBrand} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("CASE_BRAND", initialValues.computer.caseBrand)} touched={computerTouched.caseBrand} error={computerErrors.caseBrand} />
                                        <InputField name="computer.caseModel" label={fa.assets.fields.caseModel} touched={computerTouched.caseModel} error={computerErrors.caseModel} />
-                                       <InputField name="computer.psuBrand" label={fa.assets.fields.psuBrand} touched={computerTouched.psuBrand} error={computerErrors.psuBrand} />
+                                       <SelectField name="computer.psuBrand" label={fa.assets.fields.psuBrand} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("PSU_BRAND", initialValues.computer.psuBrand)} touched={computerTouched.psuBrand} error={computerErrors.psuBrand} />
                                        <InputField name="computer.psuModel" label={fa.assets.fields.psuModel} touched={computerTouched.psuModel} error={computerErrors.psuModel} />
-                                       <InputField name="computer.speakerType" label={fa.assets.fields.speakerType} touched={computerTouched.speakerType} error={computerErrors.speakerType} />
+                                       <SelectField name="computer.speakerType" label={fa.assets.fields.speakerType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SPEAKER_TYPE", initialValues.computer.speakerType)} touched={computerTouched.speakerType} error={computerErrors.speakerType} />
                                        <InputField name="computer.monitorInfo" label={fa.assets.fields.monitorInfo} touched={computerTouched.monitorInfo} error={computerErrors.monitorInfo} />
                                     </div>
                                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -493,12 +523,12 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                        {fa.assets.form.operatingSystem}
                                     </h3>
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                       <InputField name="computer.osName" label={fa.assets.fields.osName} touched={computerTouched.osName} error={computerErrors.osName} />
-                                       <InputField name="computer.osEdition" label={fa.assets.fields.osEdition} touched={computerTouched.osEdition} error={computerErrors.osEdition} />
+                                       <SelectField name="computer.osName" label={fa.assets.fields.osName} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_NAME", initialValues.computer.osName)} touched={computerTouched.osName} error={computerErrors.osName} />
+                                       <SelectField name="computer.osEdition" label={fa.assets.fields.osEdition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_EDITION", initialValues.computer.osEdition)} touched={computerTouched.osEdition} error={computerErrors.osEdition} />
                                        <InputField name="computer.osVersion" label={fa.assets.fields.osVersion} touched={computerTouched.osVersion} error={computerErrors.osVersion} />
                                        <InputField name="computer.osInstalledOn" label={fa.assets.fields.osInstalledOn} type="date" dir="ltr" touched={computerTouched.osInstalledOn} error={computerErrors.osInstalledOn} />
                                        <InputField name="computer.osBuild" label={fa.assets.fields.osBuild} touched={computerTouched.osBuild} error={computerErrors.osBuild} />
-                                       <InputField name="computer.officeVersion" label={fa.assets.fields.officeVersion} touched={computerTouched.officeVersion} error={computerErrors.officeVersion} />
+                                       <SelectField name="computer.officeVersion" label={fa.assets.fields.officeVersion} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OFFICE_VERSION", initialValues.computer.officeVersion)} touched={computerTouched.officeVersion} error={computerErrors.officeVersion} />
                                        <InputField name="computer.systemUsername" label={fa.assets.fields.systemUsername} dir="ltr" touched={computerTouched.systemUsername} error={computerErrors.systemUsername} />
                                        <InputField name="computer.automationUsername" label={fa.assets.fields.automationUsername} dir="ltr" touched={computerTouched.automationUsername} error={computerErrors.automationUsername} />
                                     </div>
@@ -513,8 +543,8 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                  </h3>
                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <InputField name="monitor.sizeInches" label={fa.assets.fields.sizeInches} type="number" step="any" inputMode="decimal" touched={monitorTouched.sizeInches} error={monitorErrors.sizeInches} />
-                                    <InputField name="monitor.panelType" label={fa.assets.fields.panelType} touched={monitorTouched.panelType} error={monitorErrors.panelType} />
-                                    <InputField name="monitor.resolution" label={fa.assets.fields.resolution} touched={monitorTouched.resolution} error={monitorErrors.resolution} />
+                                    <SelectField name="monitor.panelType" label={fa.assets.fields.panelType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("PANEL_TYPE", initialValues.monitor.panelType)} touched={monitorTouched.panelType} error={monitorErrors.panelType} />
+                                    <SelectField name="monitor.resolution" label={fa.assets.fields.resolution} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("RESOLUTION", initialValues.monitor.resolution)} touched={monitorTouched.resolution} error={monitorErrors.resolution} />
                                  </div>
                               </div>
                            ) : null}
@@ -525,15 +555,15 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                     {fa.assets.form.peripheralDetails}
                                  </h3>
                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    <InputField name="peripheral.connectionType" label={fa.assets.fields.connectionType} touched={peripheralTouched.connectionType} error={peripheralErrors.connectionType} />
+                                    <SelectField name="peripheral.connectionType" label={fa.assets.fields.connectionType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("CONNECTION_TYPE", initialValues.peripheral.connectionType)} touched={peripheralTouched.connectionType} error={peripheralErrors.connectionType} />
                                     {["PRINTER", "SCANNER", "COPIER"].includes(values.type) ? (
                                        <>
-                                          <InputField name="peripheral.printerType" label={fa.assets.fields.printerType} touched={peripheralTouched.printerType} error={peripheralErrors.printerType} />
+                                          <SelectField name="peripheral.printerType" label={fa.assets.fields.printerType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("PRINTER_TYPE", initialValues.peripheral.printerType)} touched={peripheralTouched.printerType} error={peripheralErrors.printerType} />
                                           <InputField name="peripheral.cartridgeModel" label={fa.assets.fields.cartridgeModel} touched={peripheralTouched.cartridgeModel} error={peripheralErrors.cartridgeModel} />
                                        </>
                                     ) : null}
                                     {values.type === "SPEAKER" ? (
-                                       <InputField name="peripheral.speakerType" label={fa.assets.fields.speakerType} touched={peripheralTouched.speakerType} error={peripheralErrors.speakerType} />
+                                       <SelectField name="peripheral.speakerType" label={fa.assets.fields.speakerType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SPEAKER_TYPE", initialValues.peripheral.speakerType)} touched={peripheralTouched.speakerType} error={peripheralErrors.speakerType} />
                                     ) : null}
                                  </div>
                               </div>
@@ -549,7 +579,7 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                     <InputField name="network.netboxTitle" label={fa.assets.fields.netboxTitle} touched={networkTouched.netboxTitle} error={networkErrors.netboxTitle} />
                                     <InputField name="network.hostname" label={fa.assets.fields.hostname} dir="ltr" touched={networkTouched.hostname} error={networkErrors.hostname} />
                                     <InputField name="network.macAddress" label={fa.assets.fields.macAddress} dir="ltr" touched={networkTouched.macAddress} error={networkErrors.macAddress} />
-                                    <InputField name="network.networkType" label={fa.assets.fields.networkType} touched={networkTouched.networkType} error={networkErrors.networkType} />
+                                    <SelectField name="network.networkType" label={fa.assets.fields.networkType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("NETWORK_TYPE", initialValues.network.networkType)} touched={networkTouched.networkType} error={networkErrors.networkType} />
                                     <InputField name="network.port" label={fa.assets.fields.port} touched={networkTouched.port} error={networkErrors.port} />
                                  </div>
                               </div>
@@ -561,10 +591,10 @@ export default function AssetForm({ mode, asset }: AssetFormProps) {
                                     {fa.assets.form.softwareDetails}
                                  </h3>
                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                    <InputField name="software.vendor" label={fa.assets.fields.vendor} touched={softwareTouched.vendor} error={softwareErrors.vendor} />
+                                    <SelectField name="software.vendor" label={fa.assets.fields.vendor} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SOFTWARE_VENDOR", initialValues.software.vendor)} touched={softwareTouched.vendor} error={softwareErrors.vendor} />
                                     <InputField name="software.version" label={fa.assets.fields.version} dir="ltr" touched={softwareTouched.version} error={softwareErrors.version} />
-                                    <InputField name="software.edition" label={fa.assets.fields.edition} touched={softwareTouched.edition} error={softwareErrors.edition} />
-                                    <InputField name="software.licenseType" label={fa.assets.fields.licenseType} touched={softwareTouched.licenseType} error={softwareErrors.licenseType} />
+                                    <SelectField name="software.edition" label={fa.assets.fields.edition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SOFTWARE_EDITION", initialValues.software.edition)} touched={softwareTouched.edition} error={softwareErrors.edition} />
+                                    <SelectField name="software.licenseType" label={fa.assets.fields.licenseType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("LICENSE_TYPE", initialValues.software.licenseType)} touched={softwareTouched.licenseType} error={softwareErrors.licenseType} />
                                     <InputField name="software.seatCount" label={fa.assets.fields.seatCount} type="number" step="1" inputMode="numeric" touched={softwareTouched.seatCount} error={softwareErrors.seatCount} />
                                     <InputField name="software.licenseExpiry" label={fa.assets.fields.licenseExpiry} type="date" dir="ltr" touched={softwareTouched.licenseExpiry} error={softwareErrors.licenseExpiry} />
                                     <InputField name="software.installedOn" label={fa.assets.fields.installedOn} type="date" dir="ltr" touched={softwareTouched.installedOn} error={softwareErrors.installedOn} />

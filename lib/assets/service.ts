@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import type { SessionUser } from "@/lib/auth/session"
 import { OrganizationInputError, resolveOrgUnitAndLocation } from "@/lib/organization/service"
+import { contractOptionNameKey } from "@/lib/contracts/validation"
+import type { ContractOptionKind } from "@/lib/contracts/kinds"
 import { fa } from "@/lib/i18n/fa"
 import {
    CATEGORY_BY_TYPE,
@@ -114,6 +116,39 @@ const assetDetailInclude = {
 } as const satisfies Prisma.AssetInclude
 
 type AssetDetailRow = Prisma.AssetGetPayload<{ include: typeof assetDetailInclude }>
+
+/** Current contract-managed values, used to preserve legacy (off-list) data. */
+const contractCurrentSelect = {
+   brand: true,
+   computerDetail: {
+      select: {
+         systemType: true,
+         motherboardBrand: true,
+         cpuTier: true,
+         ramType: true,
+         gpuType: true,
+         gpuBrand: true,
+         caseBrand: true,
+         psuBrand: true,
+         speakerType: true,
+         osName: true,
+         osEdition: true,
+         officeVersion: true,
+      },
+   },
+   monitorDetail: { select: { panelType: true, resolution: true } },
+   peripheralDetail: { select: { connectionType: true, printerType: true, speakerType: true } },
+   networkDetail: { select: { networkType: true } },
+   softwareDetail: { select: { vendor: true, licenseType: true, edition: true } },
+} as const satisfies Prisma.AssetSelect
+
+const existingAssetSelect = {
+   id: true,
+   assetCode: true,
+   ...contractCurrentSelect,
+} as const satisfies Prisma.AssetSelect
+
+type ContractCurrentRow = Prisma.AssetGetPayload<{ select: typeof contractCurrentSelect }>
 
 type AssignmentSummarySource = {
    id: string
@@ -452,6 +487,192 @@ async function assertEmployeeAvailable(
    }
 }
 
+interface ContractField {
+   kind: ContractOptionKind
+   path: string
+   value: string
+   current?: string | null
+}
+
+/**
+ * Only fields that will actually be saved are resolved. The form submits every
+ * detail section, but switching type must not validate the discarded one.
+ */
+function contractFieldsFor(
+   input: CreateAssetInput | UpdateAssetInput,
+   current: ContractCurrentRow | null,
+): ContractField[] {
+   const fields: ContractField[] = [
+      { kind: "BRAND", path: "brand", value: input.brand, current: current?.brand },
+   ]
+
+   if (input.type === "COMPUTER" && input.computer) {
+      const value = input.computer
+      const now = current?.computerDetail
+      fields.push(
+         { kind: "SYSTEM_TYPE", path: "computer.systemType", value: value.systemType, current: now?.systemType },
+         {
+            kind: "MOTHERBOARD_BRAND",
+            path: "computer.motherboardBrand",
+            value: value.motherboardBrand,
+            current: now?.motherboardBrand,
+         },
+         { kind: "CPU_TIER", path: "computer.cpuTier", value: value.cpuTier, current: now?.cpuTier },
+         { kind: "RAM_TYPE", path: "computer.ramType", value: value.ramType, current: now?.ramType },
+         { kind: "GPU_TYPE", path: "computer.gpuType", value: value.gpuType, current: now?.gpuType },
+         { kind: "GPU_BRAND", path: "computer.gpuBrand", value: value.gpuBrand, current: now?.gpuBrand },
+         { kind: "CASE_BRAND", path: "computer.caseBrand", value: value.caseBrand, current: now?.caseBrand },
+         { kind: "PSU_BRAND", path: "computer.psuBrand", value: value.psuBrand, current: now?.psuBrand },
+         {
+            kind: "SPEAKER_TYPE",
+            path: "computer.speakerType",
+            value: value.speakerType,
+            current: now?.speakerType,
+         },
+         { kind: "OS_NAME", path: "computer.osName", value: value.osName, current: now?.osName },
+         { kind: "OS_EDITION", path: "computer.osEdition", value: value.osEdition, current: now?.osEdition },
+         {
+            kind: "OFFICE_VERSION",
+            path: "computer.officeVersion",
+            value: value.officeVersion,
+            current: now?.officeVersion,
+         },
+      )
+   }
+
+   if (input.type === "MONITOR" && input.monitor) {
+      const value = input.monitor
+      const now = current?.monitorDetail
+      fields.push(
+         { kind: "PANEL_TYPE", path: "monitor.panelType", value: value.panelType, current: now?.panelType },
+         { kind: "RESOLUTION", path: "monitor.resolution", value: value.resolution, current: now?.resolution },
+      )
+   }
+
+   if (
+      input.peripheral &&
+      ["PRINTER", "SCANNER", "COPIER", "KEYBOARD", "MOUSE", "SPEAKER", "OTHER_HARDWARE", "PROJECTOR"].includes(
+         input.type,
+      )
+   ) {
+      const value = input.peripheral
+      const now = current?.peripheralDetail
+      fields.push(
+         {
+            kind: "CONNECTION_TYPE",
+            path: "peripheral.connectionType",
+            value: value.connectionType,
+            current: now?.connectionType,
+         },
+         { kind: "PRINTER_TYPE", path: "peripheral.printerType", value: value.printerType, current: now?.printerType },
+         { kind: "SPEAKER_TYPE", path: "peripheral.speakerType", value: value.speakerType, current: now?.speakerType },
+      )
+   }
+
+   if (input.type === "NETWORK_DEVICE" && input.network) {
+      fields.push({
+         kind: "NETWORK_TYPE",
+         path: "network.networkType",
+         value: input.network.networkType,
+         current: current?.networkDetail?.networkType,
+      })
+   }
+
+   if (input.type === "SOFTWARE" && input.software) {
+      const value = input.software
+      const now = current?.softwareDetail
+      fields.push(
+         { kind: "SOFTWARE_VENDOR", path: "software.vendor", value: value.vendor, current: now?.vendor },
+         { kind: "LICENSE_TYPE", path: "software.licenseType", value: value.licenseType, current: now?.licenseType },
+         { kind: "SOFTWARE_EDITION", path: "software.edition", value: value.edition, current: now?.edition },
+      )
+   }
+
+   return fields
+}
+
+/**
+ * Resolve submitted values to their canonical option names. An off-list value
+ * is still accepted when it is the asset's current value, so editing unrelated
+ * fields never fails or silently clears legacy data.
+ */
+async function resolveContractFields(
+   tx: Prisma.TransactionClient,
+   fields: ContractField[],
+): Promise<Map<string, string | null>> {
+   const resolved = new Map<string, string | null>()
+   const pending = fields.filter((field) => field.value.trim())
+   if (pending.length === 0) return resolved
+
+   const rows = await tx.$queryRaw<{ kind: ContractOptionKind; nameKey: string; name: string }[]>(
+      Prisma.sql`
+         SELECT "kind", "nameKey", "name"
+         FROM "contract_options"
+         WHERE ("kind", "nameKey") IN (${Prisma.join(
+            pending.map(
+               (field) =>
+                  Prisma.sql`(${field.kind}::"ContractOptionKind", ${contractOptionNameKey(field.value)})`,
+            ),
+         )})
+         FOR SHARE
+      `,
+   )
+
+   const byKey = new Map(rows.map((row) => [`${row.kind}:${row.nameKey}`, row.name]))
+
+   for (const field of pending) {
+      const key = contractOptionNameKey(field.value)
+      const match = byKey.get(`${field.kind}:${key}`)
+      if (match) {
+         resolved.set(field.path, match)
+      } else if (field.current && contractOptionNameKey(field.current) === key) {
+         resolved.set(field.path, field.current)
+      } else {
+         throw new AssetServiceError("validation", 422, {
+            fields: { [field.path]: fa.assets.form.invalidContractValue },
+         })
+      }
+   }
+
+   return resolved
+}
+
+function applyContractValues<T extends CreateAssetInput | UpdateAssetInput>(
+   input: T,
+   resolved: Map<string, string | null>,
+): T {
+   if (resolved.size === 0) return input
+
+   const next = {
+      ...input,
+      computer: input.computer ? { ...input.computer } : input.computer,
+      monitor: input.monitor ? { ...input.monitor } : input.monitor,
+      peripheral: input.peripheral ? { ...input.peripheral } : input.peripheral,
+      network: input.network ? { ...input.network } : input.network,
+      software: input.software ? { ...input.software } : input.software,
+   }
+
+   const sections: Record<string, Record<string, unknown> | undefined> = {
+      computer: next.computer as Record<string, unknown> | undefined,
+      monitor: next.monitor as Record<string, unknown> | undefined,
+      peripheral: next.peripheral as Record<string, unknown> | undefined,
+      network: next.network as Record<string, unknown> | undefined,
+      software: next.software as Record<string, unknown> | undefined,
+   }
+
+   for (const [path, value] of resolved) {
+      if (path === "brand") {
+         next.brand = value ?? ""
+         continue
+      }
+      const [section, field] = path.split(".")
+      const target = sections[section]
+      if (target) target[field] = value ?? ""
+   }
+
+   return next
+}
+
 /* -------------------------------------------------------------------------- */
 /* Detail payload builders                                                     */
 /* -------------------------------------------------------------------------- */
@@ -694,6 +915,8 @@ export async function createAsset(input: CreateAssetInput, actor: SessionUser): 
    const asset = await prisma.$transaction(async (tx) => {
       const links = await resolveAssetLinks(tx, input)
       const parentAssetId = await assertParentAvailable(tx, input.parentAssetId)
+      const resolved = await resolveContractFields(tx, contractFieldsFor(input, null))
+      const values = applyContractValues(input, resolved)
       const assetCode = input.assetCode.trim()
 
       const created = await tx.asset.create({
@@ -703,7 +926,7 @@ export async function createAsset(input: CreateAssetInput, actor: SessionUser): 
             category: input.category as AssetCategoryValue,
             type: input.type as AssetTypeValue,
             status: input.status as "ACTIVE" | "IN_STORAGE" | "IN_REPAIR" | "RETIRED" | "LOST",
-            brand: nullable(input.brand),
+            brand: nullable(values.brand),
             model: nullable(input.model),
             serialNumber: nullable(input.serialNumber),
             notes: nullable(input.notes),
@@ -711,7 +934,7 @@ export async function createAsset(input: CreateAssetInput, actor: SessionUser): 
             location: links.locationId ? { connect: { id: links.locationId } } : undefined,
             parentAsset: parentAssetId ? { connect: { id: parentAssetId } } : undefined,
             createdBy: { connect: { id: actor.id } },
-            ...detailRelationsCreate(input),
+            ...detailRelationsCreate(values),
          },
          select: { id: true },
       })
@@ -742,13 +965,15 @@ export async function updateAsset(id: string, input: UpdateAssetInput, actor: Se
    assertCategory(input.type, input.category)
    const existing = await prisma.asset.findFirst({
       where: { id, deletedAt: null },
-      select: { id: true, assetCode: true },
+      select: existingAssetSelect,
    })
    if (!existing) throw new AssetServiceError("not_found", 404)
 
    const updated = await prisma.$transaction(async (tx) => {
       const links = await resolveAssetLinks(tx, input)
       const parentAssetId = await assertParentAvailable(tx, input.parentAssetId, id)
+      const resolved = await resolveContractFields(tx, contractFieldsFor(input, existing))
+      const values = applyContractValues(input, resolved)
       const assetCode = input.assetCode.trim()
 
       await tx.asset.update({
@@ -759,7 +984,7 @@ export async function updateAsset(id: string, input: UpdateAssetInput, actor: Se
             category: input.category as AssetCategoryValue,
             type: input.type as AssetTypeValue,
             status: input.status as "ACTIVE" | "IN_STORAGE" | "IN_REPAIR" | "RETIRED" | "LOST",
-            brand: nullable(input.brand),
+            brand: nullable(values.brand),
             model: nullable(input.model),
             serialNumber: nullable(input.serialNumber),
             notes: nullable(input.notes),
@@ -769,7 +994,7 @@ export async function updateAsset(id: string, input: UpdateAssetInput, actor: Se
          },
       })
 
-      await replaceDetails(tx, id, input)
+      await replaceDetails(tx, id, values)
 
       return tx.asset.findUniqueOrThrow({
          where: { id },
