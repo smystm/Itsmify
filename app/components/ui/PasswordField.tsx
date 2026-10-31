@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Field, ErrorMessage } from "formik"
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
+import FloatingLabel from "@/app/components/ui/FloatingLabel"
 import { fa } from "@/lib/i18n/fa"
 
 interface PasswordFieldProps {
@@ -35,12 +36,6 @@ export default function PasswordField({
 
    return (
       <div className={className || undefined}>
-         <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
-            {label}
-         </label>
-
-         {hint && !hasError ? <p className="mt-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
-
          <div className="relative">
             <Field
                id={name}
@@ -49,7 +44,7 @@ export default function PasswordField({
                placeholder={placeholder}
                autoComplete={autoComplete}
                dir="ltr"
-               className={`w-full rounded-xl border bg-surface pl-4 pr-12 py-3 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400 ${
+               className={`w-full rounded-xl border bg-surface py-4 ps-4 pe-12 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400 ${
                   hasError
                      ? "border-red-500 ring-2 ring-red-500/15"
                      : "border-navy-300 dark:border-navy-700"
@@ -65,9 +60,14 @@ export default function PasswordField({
              >
                {visible ? <EyeSlashIcon className="h-5 w-5" aria-hidden="true" /> : <EyeIcon className="h-5 w-5" aria-hidden="true" />}
             </button>
+
+            <FloatingLabel htmlFor={name} hasError={hasError}>
+               {label}
+            </FloatingLabel>
          </div>
 
-         <ErrorMessage name={name} component="p" className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400" />
+         {hint && !hasError ? <p className="mt-1.5 text-[11px] leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
+         <ErrorMessage name={name} component="p" className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400" />
       </div>
    )
 }

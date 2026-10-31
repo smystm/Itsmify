@@ -4,12 +4,27 @@ import { useCallback, useEffect, useState, type ReactNode } from "react"
 import {
    ArrowLeftIcon,
    ArrowPathIcon,
+   ArrowsPointingOutIcon,
+   BoltIcon,
+   BuildingStorefrontIcon,
    CheckCircleIcon,
+   CircleStackIcon,
    CommandLineIcon,
    ComputerDesktopIcon,
    CpuChipIcon,
+   CubeIcon,
+   DocumentTextIcon,
+   KeyIcon,
+   LinkIcon,
+   PrinterIcon,
    PuzzlePieceIcon,
+   RectangleGroupIcon,
+   RectangleStackIcon,
+   SpeakerWaveIcon,
+   Square3Stack3DIcon,
+   Squares2X2Icon,
    SwatchIcon,
+   TagIcon,
    WifiIcon,
 } from "@heroicons/react/24/outline"
 import PageHero from "@/app/components/ui/PageHero"
@@ -32,6 +47,30 @@ const GROUP_ICONS: Record<ContractGroupId, ReactNode> = {
    monitor: <ComputerDesktopIcon className="h-5 w-5" aria-hidden="true" />,
    peripheral: <PuzzlePieceIcon className="h-5 w-5" aria-hidden="true" />,
    network: <WifiIcon className="h-5 w-5" aria-hidden="true" />,
+}
+
+const KIND_ICONS: Record<ContractOptionKind, ReactNode> = {
+   BRAND: <BuildingStorefrontIcon className="h-4 w-4" aria-hidden="true" />,
+   SYSTEM_TYPE: <ComputerDesktopIcon className="h-4 w-4" aria-hidden="true" />,
+   MOTHERBOARD_BRAND: <Square3Stack3DIcon className="h-4 w-4" aria-hidden="true" />,
+   CPU_TIER: <CpuChipIcon className="h-4 w-4" aria-hidden="true" />,
+   RAM_TYPE: <CircleStackIcon className="h-4 w-4" aria-hidden="true" />,
+   GPU_TYPE: <Squares2X2Icon className="h-4 w-4" aria-hidden="true" />,
+   GPU_BRAND: <RectangleGroupIcon className="h-4 w-4" aria-hidden="true" />,
+   CASE_BRAND: <CubeIcon className="h-4 w-4" aria-hidden="true" />,
+   PSU_BRAND: <BoltIcon className="h-4 w-4" aria-hidden="true" />,
+   SPEAKER_TYPE: <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" />,
+   OS_NAME: <CommandLineIcon className="h-4 w-4" aria-hidden="true" />,
+   OS_EDITION: <TagIcon className="h-4 w-4" aria-hidden="true" />,
+   OFFICE_VERSION: <DocumentTextIcon className="h-4 w-4" aria-hidden="true" />,
+   PANEL_TYPE: <ComputerDesktopIcon className="h-4 w-4" aria-hidden="true" />,
+   RESOLUTION: <ArrowsPointingOutIcon className="h-4 w-4" aria-hidden="true" />,
+   CONNECTION_TYPE: <LinkIcon className="h-4 w-4" aria-hidden="true" />,
+   PRINTER_TYPE: <PrinterIcon className="h-4 w-4" aria-hidden="true" />,
+   NETWORK_TYPE: <WifiIcon className="h-4 w-4" aria-hidden="true" />,
+   SOFTWARE_VENDOR: <BuildingStorefrontIcon className="h-4 w-4" aria-hidden="true" />,
+   LICENSE_TYPE: <KeyIcon className="h-4 w-4" aria-hidden="true" />,
+   SOFTWARE_EDITION: <RectangleStackIcon className="h-4 w-4" aria-hidden="true" />,
 }
 
 export default function ContractBuilderPanel() {
@@ -146,25 +185,38 @@ export default function ContractBuilderPanel() {
                               key={kind}
                               type="button"
                               onClick={() => setActiveKind(kind)}
-                              className="group flex h-full flex-col rounded-2xl border border-border-subtle bg-surface-muted/40 p-4 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lg hover:shadow-navy-900/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:border-navy-700 dark:bg-navy-900/40 dark:hover:shadow-black/20"
+                              className="group flex h-full items-center gap-4 rounded-2xl border border-border-subtle bg-surface-muted/40 p-3 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-400 hover:bg-surface hover:shadow-md hover:shadow-navy-900/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:border-navy-700 dark:bg-navy-900/40 dark:hover:bg-navy-900 dark:hover:shadow-black/20"
                            >
-                              <span className="flex items-start justify-between gap-2">
-                                 <span className="text-sm font-extrabold text-navy-950 dark:text-white">
-                                    {kindMeta.label}
-                                 </span>
-                                 <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-[11px] font-bold text-brand-700 dark:bg-navy-800 dark:text-brand-200">
-                                    {countLabel(kind)}
+                              {/* Icon */}
+                              <span className="flex h-18 w-18 shrink-0 items-center justify-center rounded-2xl border border-brand-500/10 bg-brand-500/10 text-brand-700 transition-all duration-300 group-hover:scale-105 group-hover:bg-brand-500/15 dark:border-brand-500/20 dark:bg-brand-500/15 dark:text-brand-200">
+                                 <span className="[&>svg]:h-9 [&>svg]:w-9">
+                                    {KIND_ICONS[kind]}
                                  </span>
                               </span>
-                              <span className="mt-1.5 block text-xs leading-6 text-navy-500 dark:text-navy-400">
-                                 {kindMeta.description}
-                              </span>
-                              <span className="mt-auto inline-flex items-center gap-1.5 pt-3 text-xs font-bold text-brand-700 dark:text-brand-200">
-                                 {fa.contractBuilder.tileAction}
-                                 <ArrowLeftIcon
-                                    className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5"
-                                    aria-hidden="true"
-                                 />
+
+                              {/* Content */}
+                              <span className="flex min-w-0 flex-1 flex-col self-stretch py-0.5">
+                                 <span className="flex items-center justify-between gap-2">
+                                    <span className="min-w-0 text-sm font-extrabold leading-6 text-navy-950 dark:text-white">
+                                       {kindMeta.label}
+                                    </span>
+
+                                    <span className="shrink-0 rounded-lg bg-surface px-2.5 py-1 text-[11px] font-bold text-brand-700 ring-1 ring-border-subtle dark:bg-navy-800 dark:text-brand-200 dark:ring-navy-700">
+                                       {countLabel(kind)}
+                                    </span>
+                                 </span>
+
+                                 <span className="mt-1 text-xs leading-6 text-navy-500 dark:text-navy-400">
+                                    {kindMeta.description}
+                                 </span>
+
+                                 <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-xs font-bold text-brand-700 dark:text-brand-200">
+                                    {fa.contractBuilder.tileAction}
+                                    <ArrowLeftIcon
+                                       className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1"
+                                       aria-hidden="true"
+                                    />
+                                 </span>
                               </span>
                            </button>
                         )

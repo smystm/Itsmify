@@ -42,6 +42,18 @@ export const fa = {
       no: "خیر",
    },
 
+   wizard: {
+      progressLabel: "پیشرفت فرم",
+      stepsLabel: "مراحل فرم",
+      stepOf: "گام {current} از {total}",
+      stepAnnouncement: "گام {current} از {total}: {title}",
+      previous: "قبلی",
+      next: "بعدی",
+      backToStep: "بازگشت به گام {title}",
+      goToStep: "رفتن به گام {title}",
+      needsFix: "نیاز به اصلاح",
+   },
+
    datePicker: {
       placeholder: "۱۴۰۳/۰۸/۰۸",
       open: "باز کردن تقویم",

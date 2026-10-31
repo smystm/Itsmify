@@ -3,11 +3,18 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline"
+import {
+   ArrowRightIcon,
+   BriefcaseIcon,
+   BuildingOffice2Icon,
+   IdentificationIcon,
+   PencilSquareIcon,
+   UserCircleIcon,
+} from "@heroicons/react/24/outline"
 import type { FormikHelpers } from "formik"
 import { FormShell } from "@/app/components/auth/FormShell"
 import PageHero from "@/app/components/ui/PageHero"
-import FormSection from "@/app/components/ui/FormSection"
+import StepForm, { type StepFormStep } from "@/app/components/ui/StepForm"
 import InputField from "@/app/components/ui/InputField"
 import JalaliDateField from "@/app/components/ui/JalaliDateField"
 import PasswordField from "@/app/components/ui/PasswordField"
@@ -54,6 +61,7 @@ export default function EmployeeForm({ mode, employee, isSelf = false }: Employe
    const router = useRouter()
    const [formError, setFormError] = useState<string | null>(null)
    const [generated, setGenerated] = useState<{ id: string; username: string; password: string } | null>(null)
+   const [validateAfterSubmit, setValidateAfterSubmit] = useState(false)
 
    const initialValues: EmployeeFormValues = {
       firstName: employee?.firstName ?? "",
@@ -162,203 +170,227 @@ export default function EmployeeForm({ mode, employee, isSelf = false }: Employe
             initialValues={initialValues}
             validationSchema={mode === "create" ? createEmployeeSchema : updateEmployeeSchema}
             onSubmit={handleSubmit}
+            validateOnChange={validateAfterSubmit}
+            validateOnBlur={validateAfterSubmit}
             className="space-y-5"
          >
-            {({ isSubmitting, touched, errors }) => (
-               <>
-                  <FormSection title={fa.employees.form.sectionIdentity} hint={fa.employees.form.sectionIdentityHint}>
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <InputField
-                           name="firstName"
-                           label={fa.employees.form.firstName}
-                           placeholder={fa.employees.form.firstNamePlaceholder}
-                           autoComplete="given-name"
-                           touched={touched.firstName}
-                           error={errors.firstName}
-                        />
-                        <InputField
-                           name="lastName"
-                           label={fa.employees.form.lastName}
-                           placeholder={fa.employees.form.lastNamePlaceholder}
-                           autoComplete="family-name"
-                           touched={touched.lastName}
-                           error={errors.lastName}
-                        />
-                        <InputField
-                           name="personnelCode"
-                           label={fa.employees.form.personnelCode}
-                           placeholder={fa.employees.form.personnelCodePlaceholder}
-                           autoComplete="off"
-                           dir="ltr"
-                           touched={touched.personnelCode}
-                           error={errors.personnelCode}
-                        />
-                        <InputField
-                           name="nationalId"
-                           label={fa.employees.form.nationalId}
-                           placeholder={fa.employees.form.nationalIdPlaceholder}
-                           autoComplete="off"
-                           dir="ltr"
-                           touched={touched.nationalId}
-                           error={errors.nationalId}
-                        />
-                        <InputField
-                           name="jobTitle"
-                           label={fa.employees.form.jobTitle}
-                           placeholder={fa.employees.form.jobTitlePlaceholder}
-                           autoComplete="organization-title"
-                           className="sm:col-span-2"
-                           touched={touched.jobTitle}
-                           error={errors.jobTitle}
-                        />
-                     </div>
-                  </FormSection>
-
-                  <FormSection title={fa.employees.form.sectionAccount} hint={fa.employees.form.sectionAccountHint}>
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <InputField
-                           name="username"
-                           label={fa.employees.form.username}
-                           placeholder={fa.employees.form.usernamePlaceholder}
-                           autoComplete="off"
-                           dir="ltr"
-                           hint={fa.authPages.usernameHint}
-                           touched={touched.username}
-                           error={errors.username}
-                        />
-                        <InputField
-                           name="phone"
-                           label={fa.employees.form.phone}
-                           placeholder={fa.employees.form.phonePlaceholder}
-                           type="tel"
-                           autoComplete="off"
-                           dir="ltr"
-                           touched={touched.phone}
-                           error={errors.phone}
-                        />
-                        <SelectField
-                           name="role"
-                           label={fa.employees.form.role}
-                           options={ROLE_ORDER.map((role) => ({ value: role, label: fa.roles[role] ?? role }))}
-                           disabled={isSelf}
-                           touched={touched.role}
-                           error={errors.role}
-                        />
-                        <SelectField
-                           name="status"
-                           label={fa.employees.form.status}
-                           options={[
-                              { value: "ACTIVE", label: fa.employees.statuses.ACTIVE },
-                              { value: "SUSPENDED", label: fa.employees.statuses.SUSPENDED },
-                           ]}
-                           disabled={isSelf}
-                           touched={touched.status}
-                           error={errors.status}
-                        />
-                     </div>
-
-                     {mode === "create" ? (
-                        <div className="mt-4">
-                           <PasswordField
-                              name="password"
-                              label={fa.employees.form.password}
-                              hint={fa.employees.form.passwordHint}
-                              autoComplete="new-password"
-                              touched={touched.password}
-                              error={errors.password}
-                           />
-                        </div>
-                     ) : null}
-                  </FormSection>
-
-                  <FormSection title={fa.employees.form.sectionOrganization} hint={fa.employees.form.sectionOrganizationHint}>
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <InputField
-                           name="orgUnitName"
-                           label={fa.employees.form.orgUnitName}
-                           placeholder={fa.employees.form.orgUnitNamePlaceholder}
-                           hint={fa.employees.form.orgUnitNameHint}
-                           autoComplete="organization"
-                           touched={touched.orgUnitName}
-                           error={errors.orgUnitName}
-                        />
-                        <div className="grid grid-cols-2 gap-4">
+            {({ touched, errors }) => {
+               const steps: StepFormStep[] = [
+                  {
+                     id: "identity",
+                     title: fa.employees.form.sectionIdentity,
+                     hint: fa.employees.form.sectionIdentityHint,
+                     icon: <IdentificationIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["firstName", "lastName", "personnelCode", "nationalId", "jobTitle"],
+                     content: (
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                            <InputField
-                              name="floor"
-                              label={fa.employees.form.floor}
-                              placeholder={fa.employees.form.floorPlaceholder}
-                              touched={touched.floor}
-                              error={errors.floor}
+                              name="firstName"
+                              label={fa.employees.form.firstName}
+                              placeholder={fa.employees.form.firstNamePlaceholder}
+                              autoComplete="given-name"
+                              touched={touched.firstName}
+                              error={errors.firstName}
                            />
                            <InputField
-                              name="roomNumber"
-                              label={fa.employees.form.roomNumber}
-                              placeholder={fa.employees.form.roomNumberPlaceholder}
-                              touched={touched.roomNumber}
-                              error={errors.roomNumber}
+                              name="lastName"
+                              label={fa.employees.form.lastName}
+                              placeholder={fa.employees.form.lastNamePlaceholder}
+                              autoComplete="family-name"
+                              touched={touched.lastName}
+                              error={errors.lastName}
+                           />
+                           <InputField
+                              name="personnelCode"
+                              label={fa.employees.form.personnelCode}
+                              placeholder={fa.employees.form.personnelCodePlaceholder}
+                              autoComplete="off"
+                              dir="ltr"
+                              touched={touched.personnelCode}
+                              error={errors.personnelCode}
+                           />
+                           <InputField
+                              name="nationalId"
+                              label={fa.employees.form.nationalId}
+                              placeholder={fa.employees.form.nationalIdPlaceholder}
+                              autoComplete="off"
+                              dir="ltr"
+                              touched={touched.nationalId}
+                              error={errors.nationalId}
+                           />
+                           <InputField
+                              name="jobTitle"
+                              label={fa.employees.form.jobTitle}
+                              placeholder={fa.employees.form.jobTitlePlaceholder}
+                              autoComplete="organization-title"
+                              className="sm:col-span-2"
+                              touched={touched.jobTitle}
+                              error={errors.jobTitle}
                            />
                         </div>
-                        <p className="text-xs leading-6 text-navy-500 dark:text-navy-400 sm:col-span-2">
-                           {fa.employees.form.locationHint}
-                        </p>
-                     </div>
-                  </FormSection>
+                     ),
+                  },
+                  {
+                     id: "account",
+                     title: fa.employees.form.sectionAccount,
+                     hint: fa.employees.form.sectionAccountHint,
+                     icon: <UserCircleIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["username", "phone", "role", "status", "password"],
+                     content: (
+                        <>
+                           <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                              <InputField
+                                 name="username"
+                                 label={fa.employees.form.username}
+                                 placeholder={fa.employees.form.usernamePlaceholder}
+                                 autoComplete="off"
+                                 dir="ltr"
+                                 hint={fa.authPages.usernameHint}
+                                 touched={touched.username}
+                                 error={errors.username}
+                              />
+                              <InputField
+                                 name="phone"
+                                 label={fa.employees.form.phone}
+                                 placeholder={fa.employees.form.phonePlaceholder}
+                                 type="tel"
+                                 autoComplete="off"
+                                 dir="ltr"
+                                 touched={touched.phone}
+                                 error={errors.phone}
+                              />
+                              <SelectField
+                                 name="role"
+                                 label={fa.employees.form.role}
+                                 options={ROLE_ORDER.map((role) => ({ value: role, label: fa.roles[role] ?? role }))}
+                                 disabled={isSelf}
+                                 touched={touched.role}
+                                 error={errors.role}
+                              />
+                              <SelectField
+                                 name="status"
+                                 label={fa.employees.form.status}
+                                 options={[
+                                    { value: "ACTIVE", label: fa.employees.statuses.ACTIVE },
+                                    { value: "SUSPENDED", label: fa.employees.statuses.SUSPENDED },
+                                 ]}
+                                 disabled={isSelf}
+                                 touched={touched.status}
+                                 error={errors.status}
+                              />
+                           </div>
 
-                  <FormSection title={fa.employees.form.sectionEmployment} hint={fa.employees.form.sectionEmploymentHint}>
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <SelectField
-                           name="employmentType"
-                           label={fa.employees.form.employmentType}
-                           placeholder={fa.employees.form.employmentTypePlaceholder}
-                           options={EMPLOYMENT_TYPES.map((type) => ({
-                              value: type,
-                              label: fa.employees.employmentTypes[type] ?? type,
-                           }))}
-                           touched={touched.employmentType}
-                           error={errors.employmentType}
+                           {mode === "create" ? (
+                              <div className="mt-6">
+                                 <PasswordField
+                                    name="password"
+                                    label={fa.employees.form.password}
+                                    hint={fa.employees.form.passwordHint}
+                                    autoComplete="new-password"
+                                    touched={touched.password}
+                                    error={errors.password}
+                                 />
+                              </div>
+                           ) : null}
+                        </>
+                     ),
+                  },
+                  {
+                     id: "organization",
+                     title: fa.employees.form.sectionOrganization,
+                     hint: fa.employees.form.sectionOrganizationHint,
+                     icon: <BuildingOffice2Icon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["orgUnitName", "floor", "roomNumber"],
+                     content: (
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                           <InputField
+                              name="orgUnitName"
+                              label={fa.employees.form.orgUnitName}
+                              placeholder={fa.employees.form.orgUnitNamePlaceholder}
+                              hint={fa.employees.form.orgUnitNameHint}
+                              autoComplete="organization"
+                              touched={touched.orgUnitName}
+                              error={errors.orgUnitName}
+                           />
+                           <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                              <InputField
+                                 name="floor"
+                                 label={fa.employees.form.floor}
+                                 placeholder={fa.employees.form.floorPlaceholder}
+                                 touched={touched.floor}
+                                 error={errors.floor}
+                              />
+                              <InputField
+                                 name="roomNumber"
+                                 label={fa.employees.form.roomNumber}
+                                 placeholder={fa.employees.form.roomNumberPlaceholder}
+                                 touched={touched.roomNumber}
+                                 error={errors.roomNumber}
+                              />
+                           </div>
+                           <p className="text-xs leading-6 text-navy-500 dark:text-navy-400 sm:col-span-2">
+                              {fa.employees.form.locationHint}
+                           </p>
+                        </div>
+                     ),
+                  },
+                  {
+                     id: "employment",
+                     title: fa.employees.form.sectionEmployment,
+                     hint: fa.employees.form.sectionEmploymentHint,
+                     icon: <BriefcaseIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["employmentType", "hireDate"],
+                     content: (
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                           <SelectField
+                              name="employmentType"
+                              label={fa.employees.form.employmentType}
+                              placeholder={fa.employees.form.employmentTypePlaceholder}
+                              options={EMPLOYMENT_TYPES.map((type) => ({
+                                 value: type,
+                                 label: fa.employees.employmentTypes[type] ?? type,
+                              }))}
+                              touched={touched.employmentType}
+                              error={errors.employmentType}
+                           />
+                           <JalaliDateField
+                              name="hireDate"
+                              label={fa.employees.form.hireDate}
+                              touched={touched.hireDate}
+                              error={errors.hireDate}
+                           />
+                        </div>
+                     ),
+                  },
+                  {
+                     id: "notes",
+                     title: fa.employees.form.sectionNotes,
+                     icon: <PencilSquareIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["notes"],
+                     content: (
+                        <TextareaField
+                           name="notes"
+                           label={fa.employees.form.notes}
+                           placeholder={fa.employees.form.notesPlaceholder}
+                           rows={4}
+                           touched={touched.notes}
+                           error={errors.notes}
                         />
-                        <JalaliDateField
-                           name="hireDate"
-                           label={fa.employees.form.hireDate}
-                           touched={touched.hireDate}
-                           error={errors.hireDate}
-                        />
-                     </div>
-                  </FormSection>
+                     ),
+                  },
+               ]
 
-                  <FormSection title={fa.employees.form.sectionNotes}>
-                     <TextareaField
-                        name="notes"
-                        label={fa.employees.form.notes}
-                        placeholder={fa.employees.form.notesPlaceholder}
-                        rows={4}
-                        touched={touched.notes}
-                        error={errors.notes}
-                     />
-                  </FormSection>
-
-                  <div className="flex flex-wrap items-center justify-end gap-3">
-                     <Link
-                        href={employee ? `/admin/employees/${employee.id}` : "/admin/employees"}
-                        className="rounded-full px-5 py-2.5 text-sm font-bold text-navy-600 transition-colors hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800"
-                     >
-                        {fa.employees.form.cancel}
-                     </Link>
-                     <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="inline-flex items-center gap-2 rounded-full bg-linear-to-l from-brand-700 to-brand-800 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-700/25 transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                     >
-                        <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                        {isSubmitting
-                           ? fa.employees.form.saving
-                           : mode === "create"
-                             ? fa.employees.form.createAction
-                             : fa.employees.form.saveAction}
-                     </button>
-                  </div>
-               </>
-            )}
+               return (
+                  <StepForm
+                     steps={steps}
+                     cancelHref={employee ? `/admin/employees/${employee.id}` : "/admin/employees"}
+                     cancelLabel={fa.employees.form.cancel}
+                     submitLabel={mode === "create" ? fa.employees.form.createAction : fa.employees.form.saveAction}
+                     submittingLabel={fa.employees.form.saving}
+                     onSubmitAttempt={() => setValidateAfterSubmit(true)}
+                  />
+               )
+            }}
          </FormShell>
 
          {generated ? (

@@ -2,6 +2,7 @@
 
 import { ErrorMessage, useFormikContext } from "formik"
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react"
+import FloatingLabel from "@/app/components/ui/FloatingLabel"
 
 export interface SelectOption {
    value: string
@@ -127,10 +128,6 @@ export default function SelectField({ name, label, options, placeholder, hint, d
 
    return (
       <div className={className || undefined}>
-         <label id={`${name}-label`} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
-            {label}
-         </label>
-
          <div ref={containerRef} className="relative">
             {/* Trigger */}
             <button
@@ -144,7 +141,7 @@ export default function SelectField({ name, label, options, placeholder, hint, d
                onKeyDown={handleKeyDown}
                className={`
                   relative flex w-full items-center justify-between
-                  rounded-xl border bg-surface py-3 pl-10 pr-4
+                  rounded-xl border bg-surface py-4 ps-4 pe-10
                   text-sm font-bold text-navy-900 outline-none
                   transition-all duration-200
                   disabled:cursor-not-allowed disabled:opacity-60
@@ -157,7 +154,7 @@ export default function SelectField({ name, label, options, placeholder, hint, d
 
                <svg
                   className={`
-                     absolute left-3 h-4 w-4 shrink-0
+                     absolute end-3 h-4 w-4 shrink-0
                      text-navy-400 transition-transform duration-200
                      dark:text-navy-500
                      ${isOpen ? "rotate-180 text-brand-500" : ""}
@@ -173,6 +170,10 @@ export default function SelectField({ name, label, options, placeholder, hint, d
                   <path d="m6 9 6 6 6-6" />
                </svg>
             </button>
+
+            <FloatingLabel id={`${name}-label`} hasError={hasError}>
+               {label}
+            </FloatingLabel>
 
             {/* Dropdown */}
             <div
@@ -262,7 +263,7 @@ export default function SelectField({ name, label, options, placeholder, hint, d
          </div>
 
          {hint && !hasError && (
-            <p id={`${name}-hint`} className="mt-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">
+            <p id={`${name}-hint`} className="mt-1.5 text-[11px] leading-5 text-navy-500 dark:text-navy-400">
                {hint}
             </p>
          )}
@@ -270,7 +271,7 @@ export default function SelectField({ name, label, options, placeholder, hint, d
          <ErrorMessage
             name={name}
             render={(message) => (
-               <p id={`${name}-error`} className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+               <p id={`${name}-error`} className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400">
                   {message}
                </p>
             )}

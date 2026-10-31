@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react"
 import { getJson } from "@/app/helpers/API"
+import { floatingLabelClass } from "@/app/components/ui/FloatingLabel"
 import { fa } from "@/lib/i18n/fa"
 import type { AssetOptionDto } from "@/lib/assets/types"
 
@@ -11,9 +12,10 @@ interface ParentAssetSelectProps {
    excludeId?: string
    initial?: { id: string; assetCode: string; name: string; type: string } | null
    disabled?: boolean
+   hasError?: boolean
 }
 
-export default function ParentAssetSelect({ value, onChange, excludeId, initial, disabled = false }: ParentAssetSelectProps) {
+export default function ParentAssetSelect({ value, onChange, excludeId, initial, disabled = false, hasError = false }: ParentAssetSelectProps) {
    const [assets, setAssets] = useState<AssetOptionDto[]>([])
    const [loading, setLoading] = useState(true)
    const [isOpen, setIsOpen] = useState(false)
@@ -149,8 +151,6 @@ export default function ParentAssetSelect({ value, onChange, excludeId, initial,
 
    return (
       <label className="block">
-         <span className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">{fa.assets.form.parentAsset}</span>
-
          <div ref={containerRef} className="relative">
             {/* Trigger */}
             <button
@@ -162,7 +162,7 @@ export default function ParentAssetSelect({ value, onChange, excludeId, initial,
                onKeyDown={handleKeyDown}
                className={`
                   relative flex w-full items-center justify-between
-                  rounded-xl border bg-surface py-3 pl-10 pr-4
+                  rounded-xl border bg-surface py-4 ps-4 pe-10
                   text-sm font-bold text-navy-900 outline-none
                   transition-all duration-200
                   disabled:cursor-not-allowed disabled:opacity-60
@@ -177,7 +177,7 @@ export default function ParentAssetSelect({ value, onChange, excludeId, initial,
 
                <svg
                   className={`
-                     absolute left-3 h-4 w-4 shrink-0
+                     absolute end-3 h-4 w-4 shrink-0
                      text-navy-400 transition-transform duration-200
                      dark:text-navy-500
                      ${isOpen ? "rotate-180 text-brand-500" : ""}
@@ -193,6 +193,8 @@ export default function ParentAssetSelect({ value, onChange, excludeId, initial,
                   <path d="m6 9 6 6 6-6" />
                </svg>
             </button>
+
+            <span className={floatingLabelClass(hasError)}>{fa.assets.form.parentAsset}</span>
 
             {/* Dropdown */}
             <div

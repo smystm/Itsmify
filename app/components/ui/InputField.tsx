@@ -1,5 +1,6 @@
 import { Field, ErrorMessage } from "formik"
 import type { ReactNode } from "react"
+import FloatingLabel from "@/app/components/ui/FloatingLabel"
 
 interface InputFieldProps {
    name: string
@@ -43,8 +44,8 @@ export default function InputField({
 
    const inputClass = [
       baseInputClass,
-      // `ps-*` is logical, so the slot stays on the right in RTL.
-      icon ? "py-3 pr-11 pl-4" : "px-4 py-3",
+      // Physical right padding keeps the icon slot clear even when `dir="ltr"` is set on the field.
+      icon ? "py-3 pr-11 pl-4" : "px-3.5 py-4",
       hasError ? "border-red-500 ring-2 ring-red-500/15" : "",
    ]
       .filter(Boolean)
@@ -52,13 +53,9 @@ export default function InputField({
 
    return (
       <div className={className || undefined}>
-         <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
-            {label}
-         </label>
-
          <div className="relative">
             {icon ? (
-               <span className="pointer-events-none absolute inset-y-0 inset-start-0 flex w-11 items-center justify-center text-navy-500 dark:text-navy-400">
+               <span className="pointer-events-none absolute inset-y-0 start-0 flex w-11 items-center justify-center text-navy-500 dark:text-navy-400">
                   {icon}
                </span>
             ) : null}
@@ -73,10 +70,13 @@ export default function InputField({
                inputMode={inputMode}
                className={inputClass}
             />
+            <FloatingLabel htmlFor={name} hasError={hasError}>
+               {label}
+            </FloatingLabel>
          </div>
 
-         {hint && !hasError ? <p className="mt-1.5 text-xs leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
-         <ErrorMessage name={name} component="p" className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400" />
+         {hint && !hasError ? <p className="mt-1.5 text-[11px] leading-5 text-navy-500 dark:text-navy-400">{hint}</p> : null}
+         <ErrorMessage name={name} component="p" className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400" />
       </div>
    )
 }

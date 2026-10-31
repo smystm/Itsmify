@@ -605,11 +605,10 @@ function UserFormDialog({
             initialValues={initialValues}
             validationSchema={userFormSchema}
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
          >
             {({ isSubmitting, touched, errors }) => (
                <>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                      <InputField
                         name="firstName"
                         label={fa.admin.firstName}
@@ -650,7 +649,7 @@ function UserFormDialog({
                      error={errors.phone}
                   />
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                      <div>
                         <label htmlFor="role" className="mb-1.5 block text-sm font-bold text-navy-800 dark:text-navy-200">
                            {fa.admin.roleLabel}
@@ -660,7 +659,7 @@ function UserFormDialog({
                            id="role"
                            name="role"
                            disabled={isSelf}
-                           className="w-full rounded-xl border border-navy-300 bg-surface px-4 py-3 text-sm font-bold text-navy-900 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
+                           className="w-full rounded-xl border border-navy-300 bg-surface px-4 py-4 text-sm font-bold text-navy-900 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
                         >
                            {ROLE_ORDER.map((role) => (
                               <option key={role} value={role}>
@@ -680,7 +679,7 @@ function UserFormDialog({
                            id="status"
                            name="status"
                            disabled={isSelf}
-                           className="w-full rounded-xl border border-navy-300 bg-surface px-4 py-3 text-sm font-bold text-navy-900 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
+                           className="w-full rounded-xl border border-navy-300 bg-surface px-4 py-4 text-sm font-bold text-navy-900 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50"
                         >
                            {STATUS_OPTIONS.map((status) => (
                               <option key={status} value={status}>

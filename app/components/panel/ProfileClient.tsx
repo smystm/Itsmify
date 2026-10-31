@@ -543,7 +543,7 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
                               initialValues={{ code: "" }}
                               validationSchema={codeSchema}
                               onSubmit={verifyCode}
-                              className="mt-4 flex flex-col gap-4"
+                              className="mt-4 flex flex-col gap-6"
                            >
                               {({ isSubmitting, touched, errors }) => (
                                  <>

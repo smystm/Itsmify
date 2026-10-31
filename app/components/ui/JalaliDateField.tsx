@@ -20,6 +20,7 @@ import {
    todayIso,
    toPersianDigits,
 } from "@/lib/date/jalali"
+import FloatingLabel from "@/app/components/ui/FloatingLabel"
 import { fa } from "@/lib/i18n/fa"
 
 interface JalaliDateFieldProps {
@@ -79,7 +80,7 @@ export default function JalaliDateField({ name, label, touched, error, className
    const today = isoToJalali(todayValue)
 
    const inputClass = [
-      "w-full rounded-xl border border-navy-300 bg-surface py-3 pr-11 pl-4 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400",
+      "w-full rounded-xl border border-navy-300 bg-surface py-4 pr-11 pl-4 text-sm text-navy-900 outline-none transition-all duration-200 placeholder:text-navy-500 hover:border-brand-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none dark:border-navy-700 dark:bg-navy-900 dark:text-navy-50 dark:placeholder:text-navy-400",
       hasError ? "border-red-500 ring-2 ring-red-500/15" : "",
    ]
       .filter(Boolean)
@@ -123,10 +124,6 @@ export default function JalaliDateField({ name, label, touched, error, className
 
    return (
       <div className={className || undefined}>
-         <label htmlFor={name} className="mb-1.5 block min-h-10 text-sm font-bold leading-5 text-navy-800 dark:text-navy-200">
-            {label}
-         </label>
-
          <Popover.Root
             open={open}
             onOpenChange={(next) => {
@@ -164,6 +161,10 @@ export default function JalaliDateField({ name, label, touched, error, className
                         <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
                      </button>
                   </Popover.Trigger>
+
+                  <FloatingLabel htmlFor={name} hasError={hasError}>
+                     {label}
+                  </FloatingLabel>
                </div>
             </Popover.Anchor>
 
@@ -252,7 +253,7 @@ export default function JalaliDateField({ name, label, touched, error, className
             </Popover.Portal>
          </Popover.Root>
 
-         <ErrorMessage name={name} component="p" className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400" />
+         <ErrorMessage name={name} component="p" className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400" />
       </div>
    )
 }

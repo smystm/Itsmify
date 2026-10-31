@@ -158,7 +158,7 @@ export default function ManageContractOptionsDialog({
                   <p className="mt-1.5 text-xs leading-6 text-navy-500 dark:text-navy-400">{fa.contractBuilder.emptyBody}</p>
                </div>
             ) : (
-               <ul role="list" className="space-y-2">
+               <ul role="list" className="max-h-80 space-y-2 overflow-y-auto pe-1">
                   {options.map((option) => (
                      <li
                         key={option.id}

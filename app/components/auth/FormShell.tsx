@@ -14,7 +14,7 @@ export function FormShell<T extends FormikValues>({
    validationSchema,
    onSubmit,
    children,
-   className = "flex flex-col gap-4",
+   className = "flex flex-col gap-6",
    validateOnBlur = true,
    validateOnChange = true,
 }: {

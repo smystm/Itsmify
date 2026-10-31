@@ -14,7 +14,7 @@ export default function CheckboxField({ name, label, hint, disabled = false }: C
       <div>
          <label
             htmlFor={name}
-            className="flex cursor-pointer items-start gap-3 rounded-xl border border-border-subtle bg-surface px-4 py-3 text-sm font-bold text-navy-800 transition-colors hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-100"
+            className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border-subtle bg-surface px-3.5 py-2.5 text-[13px] font-bold text-navy-800 transition-colors hover:border-brand-400 dark:border-navy-700 dark:bg-navy-900 dark:text-navy-100"
          >
             <Field
                id={name}
@@ -25,10 +25,10 @@ export default function CheckboxField({ name, label, hint, disabled = false }: C
             />
             <span>
                {label}
-               {hint ? <span className="mt-1 block text-xs font-normal leading-5 text-navy-500 dark:text-navy-400">{hint}</span> : null}
+               {hint ? <span className="mt-1 block text-[11px] font-normal leading-5 text-navy-500 dark:text-navy-400">{hint}</span> : null}
             </span>
          </label>
-         <ErrorMessage name={name} component="p" className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400" />
+         <ErrorMessage name={name} component="p" className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400" />
       </div>
    )
 }

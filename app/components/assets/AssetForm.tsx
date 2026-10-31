@@ -3,11 +3,19 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRightIcon, CheckIcon } from "@heroicons/react/24/outline"
+import {
+   ArrowRightIcon,
+   CpuChipIcon,
+   MapPinIcon,
+   PencilSquareIcon,
+   Squares2X2Icon,
+   TagIcon,
+   UserPlusIcon,
+} from "@heroicons/react/24/outline"
 import type { FormikErrors, FormikHelpers } from "formik"
 import { FormShell } from "@/app/components/auth/FormShell"
 import PageHero from "@/app/components/ui/PageHero"
-import FormSection from "@/app/components/ui/FormSection"
+import StepForm, { type StepFormStep } from "@/app/components/ui/StepForm"
 import InputField from "@/app/components/ui/InputField"
 import JalaliDateField from "@/app/components/ui/JalaliDateField"
 import SelectField from "@/app/components/ui/SelectField"
@@ -27,6 +35,7 @@ import {
 import type { AssetDetailDto } from "@/lib/assets/types"
 import type { ContractOptionKind } from "@/lib/contracts/kinds"
 import type { ContractOptionsByKind } from "@/lib/contracts/types"
+import type { EmployeeLookupDto } from "@/lib/employees/types"
 
 interface ComputerValues {
    systemType: string
@@ -131,6 +140,18 @@ const PERIPHERAL_TYPES = [
    "OTHER_HARDWARE",
 ]
 
+const DETAIL_GROUPS = ["computer", "monitor", "peripheral", "network", "software"] as const
+type DetailGroup = (typeof DETAIL_GROUPS)[number]
+
+function detailGroupForType(type: string): DetailGroup | null {
+   if (type === "COMPUTER") return "computer"
+   if (type === "MONITOR") return "monitor"
+   if (PERIPHERAL_TYPES.includes(type)) return "peripheral"
+   if (type === "NETWORK_DEVICE") return "network"
+   if (type === "SOFTWARE") return "software"
+   return null
+}
+
 function numberString(value: number | null | undefined): string {
    return value === null || value === undefined ? "" : String(value)
 }
@@ -156,6 +177,8 @@ function nestFieldErrors(errors: Record<string, string>): Record<string, unknown
 export default function AssetForm({ mode, asset, options }: AssetFormProps) {
    const router = useRouter()
    const [formError, setFormError] = useState<string | null>(null)
+   const [validateAfterSubmit, setValidateAfterSubmit] = useState(false)
+   const [assignedEmployee, setAssignedEmployee] = useState<EmployeeLookupDto | null>(null)
 
    const currentBrand = asset?.brand?.trim() ?? ""
    const contractOptions = (kind: ContractOptionKind, current: string) => {
@@ -313,9 +336,11 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
             initialValues={initialValues}
             validationSchema={mode === "create" ? createAssetSchema : updateAssetSchema}
             onSubmit={handleSubmit}
+            validateOnChange={validateAfterSubmit}
+            validateOnBlur={validateAfterSubmit}
             className="space-y-5"
          >
-            {({ isSubmitting, values, touched, errors, setFieldValue }) => {
+            {({ values, touched, errors, setFieldValue }) => {
                const category = values.category as AssetCategoryValue | ""
                const typeOptions = category ? TYPES_BY_CATEGORY[category] ?? [] : []
                const isComputer = values.type === "COMPUTER"
@@ -323,6 +348,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                const isPeripheral = PERIPHERAL_TYPES.includes(values.type)
                const isNetwork = values.type === "NETWORK_DEVICE"
                const isSoftware = values.type === "SOFTWARE"
+               const detailKey = detailGroupForType(values.type)
                const computerErrors = (errors.computer ?? {}) as Partial<Record<keyof ComputerValues, string>>
                const computerTouched = (touched.computer ?? {}) as Partial<Record<keyof ComputerValues, boolean>>
                const monitorErrors = (errors.monitor ?? {}) as Partial<Record<keyof MonitorValues, string>>
@@ -334,122 +360,161 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                const softwareErrors = (errors.software ?? {}) as Partial<Record<keyof SoftwareValues, string>>
                const softwareTouched = (touched.software ?? {}) as Partial<Record<keyof SoftwareValues, boolean>>
 
-               return (
-                  <>
-                     {mode === "create" ? (
-                        <FormSection title={fa.assets.form.sectionAssignment} hint={fa.assets.form.sectionAssignmentHint}>
-                           <div className="grid grid-cols-1 gap-4">
-                              <div>
-                                 <p className="mb-1.5 text-sm font-bold text-navy-800 dark:text-navy-200">
-                                    {fa.assets.form.assignedTo}
-                                 </p>
-                                 <EmployeePicker
-                                    value={values.assignedToEmployeeId}
-                                    onChange={(employee) => void setFieldValue("assignedToEmployeeId", employee?.profileId ?? "")}
-                                 />
-                              </div>
-                              <TextareaField
-                                 name="assignNote"
-                                 label={fa.assets.form.assignNote}
-                                 rows={2}
-                                 placeholder={fa.assets.assign.notePlaceholder}
-                                 touched={touched.assignNote}
-                                 error={errors.assignNote}
-                              />
-                           </div>
-                        </FormSection>
-                     ) : null}
+               // Only the selected type's specs are persisted; blank the others so a
+               // stale hidden value can never block submit from an invisible step.
+               const resetOtherDetails = (nextType: string) => {
+                  const keep = detailGroupForType(nextType)
+                  for (const group of DETAIL_GROUPS) {
+                     if (group !== keep) void setFieldValue(group, initialValues[group])
+                  }
+               }
 
-                     <FormSection title={fa.assets.form.sectionIdentity} hint={fa.assets.form.sectionIdentityHint}>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                           <InputField
-                              name="name"
-                              label={fa.assets.form.name}
-                              placeholder={fa.assets.form.namePlaceholder}
-                              touched={touched.name}
-                              error={errors.name}
-                           />
-                           <InputField
-                              name="assetCode"
-                              label={fa.assets.form.assetCode}
-                              placeholder={fa.assets.form.assetCodePlaceholder}
-                              hint={fa.assets.form.assetCodeHint}
-                              dir="ltr"
-                              autoComplete="off"
-                              touched={touched.assetCode}
-                              error={errors.assetCode}
-                           />
-                           <SelectField
-                              name="brand"
-                              label={fa.assets.form.brand}
-                              placeholder={fa.assets.form.brandPlaceholder}
-                              hint={fa.assets.form.contractHint}
-                              options={brandOptions}
-                              touched={touched.brand}
-                              error={errors.brand}
-                           />
-                           <InputField
-                              name="model"
-                              label={fa.assets.form.model}
-                              placeholder={fa.assets.form.modelPlaceholder}
-                              touched={touched.model}
-                              error={errors.model}
-                           />
-                           <InputField
-                              name="serialNumber"
-                              label={fa.assets.form.serialNumber}
-                              placeholder={fa.assets.form.serialPlaceholder}
-                              dir="ltr"
-                              autoComplete="off"
-                              className="sm:col-span-2"
-                              touched={touched.serialNumber}
-                              error={errors.serialNumber}
-                           />
-                        </div>
-                     </FormSection>
+               const steps: StepFormStep[] = []
 
-                     <FormSection title={fa.assets.form.sectionClassification} hint={fa.assets.form.sectionClassificationHint}>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                           <SelectField
-                              name="category"
-                              label={fa.assets.form.category}
-                              placeholder={fa.assets.form.categoryPlaceholder}
-                              options={[
-                                 { value: "HARDWARE", label: fa.assets.categories.HARDWARE },
-                                 { value: "SOFTWARE", label: fa.assets.categories.SOFTWARE },
-                                 { value: "NETWORK", label: fa.assets.categories.NETWORK },
-                              ]}
-                              onChange={(value) => {
-                                 void setFieldValue("category", value)
-                                 void setFieldValue("type", "")
+               if (mode === "create") {
+                  steps.push({
+                     id: "assignment",
+                     title: fa.assets.form.sectionAssignment,
+                     hint: fa.assets.form.sectionAssignmentHint,
+                     icon: <UserPlusIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: ["assignedToEmployeeId", "assignNote"],
+                     content: (
+                        <div className="grid grid-cols-1 gap-6">
+                           <EmployeePicker
+                              value={values.assignedToEmployeeId}
+                              label={fa.assets.form.assignedTo}
+                              initial={assignedEmployee}
+                              onChange={(employee) => {
+                                 setAssignedEmployee(employee)
+                                 void setFieldValue("assignedToEmployeeId", employee?.profileId ?? "")
                               }}
-                              touched={touched.category}
-                              error={errors.category}
                            />
-                           <SelectField
-                              name="type"
-                              label={fa.assets.form.type}
-                              placeholder={fa.assets.form.typePlaceholder}
-                              options={typeOptions.map((type) => ({
-                                 value: type,
-                                 label: fa.assets.types[type] ?? type,
-                              }))}
-                              disabled={!category}
-                              touched={touched.type}
-                              error={errors.type}
-                           />
-                           <SelectField
-                              name="status"
-                              label={fa.assets.form.status}
-                              options={Object.entries(fa.assets.statuses).map(([value, label]) => ({ value, label }))}
-                              touched={touched.status}
-                              error={errors.status}
+                           <TextareaField
+                              name="assignNote"
+                              label={fa.assets.form.assignNote}
+                              rows={2}
+                              placeholder={fa.assets.assign.notePlaceholder}
+                              touched={touched.assignNote}
+                              error={errors.assignNote}
                            />
                         </div>
-                     </FormSection>
+                     ),
+                  })
+               }
 
-                     <FormSection title={fa.assets.form.sectionLocation} hint={fa.assets.form.sectionLocationHint}>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+               steps.push({
+                  id: "identity",
+                  title: fa.assets.form.sectionIdentity,
+                  hint: fa.assets.form.sectionIdentityHint,
+                  icon: <TagIcon className="h-5 w-5" aria-hidden="true" />,
+                  errorKeys: ["name", "assetCode", "brand", "model", "serialNumber"],
+                  content: (
+                     <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <InputField
+                           name="name"
+                           label={fa.assets.form.name}
+                           placeholder={fa.assets.form.namePlaceholder}
+                           touched={touched.name}
+                           error={errors.name}
+                        />
+                        <InputField
+                           name="assetCode"
+                           label={fa.assets.form.assetCode}
+                           placeholder={fa.assets.form.assetCodePlaceholder}
+                           hint={fa.assets.form.assetCodeHint}
+                           dir="ltr"
+                           autoComplete="off"
+                           touched={touched.assetCode}
+                           error={errors.assetCode}
+                        />
+                        <SelectField
+                           name="brand"
+                           label={fa.assets.form.brand}
+                           placeholder={fa.assets.form.brandPlaceholder}
+                           hint={fa.assets.form.contractHint}
+                           options={brandOptions}
+                           touched={touched.brand}
+                           error={errors.brand}
+                        />
+                        <InputField
+                           name="model"
+                           label={fa.assets.form.model}
+                           placeholder={fa.assets.form.modelPlaceholder}
+                           touched={touched.model}
+                           error={errors.model}
+                        />
+                        <InputField
+                           name="serialNumber"
+                           label={fa.assets.form.serialNumber}
+                           placeholder={fa.assets.form.serialPlaceholder}
+                           dir="ltr"
+                           autoComplete="off"
+                           className="sm:col-span-2"
+                           touched={touched.serialNumber}
+                           error={errors.serialNumber}
+                        />
+                     </div>
+                  ),
+               })
+
+               steps.push({
+                  id: "classification",
+                  title: fa.assets.form.sectionClassification,
+                  hint: fa.assets.form.sectionClassificationHint,
+                  icon: <Squares2X2Icon className="h-5 w-5" aria-hidden="true" />,
+                  errorKeys: ["category", "type", "status"],
+                  content: (
+                     <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
+                        <SelectField
+                           name="category"
+                           label={fa.assets.form.category}
+                           placeholder={fa.assets.form.categoryPlaceholder}
+                           options={[
+                              { value: "HARDWARE", label: fa.assets.categories.HARDWARE },
+                              { value: "SOFTWARE", label: fa.assets.categories.SOFTWARE },
+                              { value: "NETWORK", label: fa.assets.categories.NETWORK },
+                           ]}
+                           onChange={(value) => {
+                              void setFieldValue("category", value)
+                              void setFieldValue("type", "")
+                              resetOtherDetails("")
+                           }}
+                           touched={touched.category}
+                           error={errors.category}
+                        />
+                        <SelectField
+                           name="type"
+                           label={fa.assets.form.type}
+                           placeholder={fa.assets.form.typePlaceholder}
+                           options={typeOptions.map((type) => ({
+                              value: type,
+                              label: fa.assets.types[type] ?? type,
+                           }))}
+                           disabled={!category}
+                           onChange={resetOtherDetails}
+                           touched={touched.type}
+                           error={errors.type}
+                        />
+                        <SelectField
+                           name="status"
+                           label={fa.assets.form.status}
+                           options={Object.entries(fa.assets.statuses).map(([value, label]) => ({ value, label }))}
+                           touched={touched.status}
+                           error={errors.status}
+                        />
+                     </div>
+                  ),
+               })
+
+               steps.push({
+                  id: "location",
+                  title: fa.assets.form.sectionLocation,
+                  hint: fa.assets.form.sectionLocationHint,
+                  icon: <MapPinIcon className="h-5 w-5" aria-hidden="true" />,
+                  errorKeys: ["orgUnitName", "floor", "roomNumber", "parentAssetId"],
+                  content: (
+                     <>
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
                            <InputField
                               name="orgUnitName"
                               label={fa.assets.form.orgUnitName}
@@ -472,28 +537,38 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                               error={errors.roomNumber}
                            />
                         </div>
-                        <div className="mt-4">
+                        <div className="mt-6">
                            <ParentAssetSelect
                               value={values.parentAssetId}
                               initial={asset?.parentAsset ?? null}
                               excludeId={asset?.id}
+                              hasError={typeof errors.parentAssetId === "string"}
                               onChange={(parent) => void setFieldValue("parentAssetId", parent?.id ?? "")}
                            />
                            {typeof errors.parentAssetId === "string" ? (
-                              <p className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400">{errors.parentAssetId}</p>
+                              <p className="mt-1.5 text-[11px] font-medium leading-5 text-red-600 dark:text-red-400">{errors.parentAssetId}</p>
                            ) : null}
                         </div>
-                     </FormSection>
+                     </>
+                  ),
+               })
 
-                     {isComputer || isMonitor || isPeripheral || isNetwork || isSoftware ? (
-                        <FormSection title={fa.assets.form.sectionDetails} hint={fa.assets.form.sectionDetailsHint}>
+               if (detailKey) {
+                  steps.push({
+                     id: "details",
+                     title: fa.assets.form.sectionDetails,
+                     hint: fa.assets.form.sectionDetailsHint,
+                     icon: <CpuChipIcon className="h-5 w-5" aria-hidden="true" />,
+                     errorKeys: [detailKey],
+                     content: (
+                        <div className="space-y-6">
                            {isComputer ? (
-                              <div className="space-y-7">
+                              <div className="space-y-6">
                                  <div>
                                     <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                        {fa.assets.form.hardwareDetails}
                                     </h3>
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                                        <SelectField name="computer.systemType" label={fa.assets.fields.systemType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SYSTEM_TYPE", initialValues.computer.systemType)} touched={computerTouched.systemType} error={computerErrors.systemType} />
                                        <SelectField name="computer.motherboardBrand" label={fa.assets.fields.motherboardBrand} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("MOTHERBOARD_BRAND", initialValues.computer.motherboardBrand)} touched={computerTouched.motherboardBrand} error={computerErrors.motherboardBrand} />
                                        <InputField name="computer.motherboardModel" label={fa.assets.fields.motherboardModel} touched={computerTouched.motherboardModel} error={computerErrors.motherboardModel} />
@@ -513,7 +588,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                        <SelectField name="computer.speakerType" label={fa.assets.fields.speakerType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SPEAKER_TYPE", initialValues.computer.speakerType)} touched={computerTouched.speakerType} error={computerErrors.speakerType} />
                                        <InputField name="computer.monitorInfo" label={fa.assets.fields.monitorInfo} touched={computerTouched.monitorInfo} error={computerErrors.monitorInfo} />
                                     </div>
-                                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                        <CheckboxField name="computer.hasDvdWriter" label={fa.assets.fields.hasDvdWriter} />
                                        <CheckboxField name="computer.hasSeparateSpeaker" label={fa.assets.fields.hasSeparateSpeaker} />
                                     </div>
@@ -523,7 +598,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                     <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                        {fa.assets.form.operatingSystem}
                                     </h3>
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                                        <SelectField name="computer.osName" label={fa.assets.fields.osName} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_NAME", initialValues.computer.osName)} touched={computerTouched.osName} error={computerErrors.osName} />
                                        <SelectField name="computer.osEdition" label={fa.assets.fields.osEdition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("OS_EDITION", initialValues.computer.osEdition)} touched={computerTouched.osEdition} error={computerErrors.osEdition} />
                                        <InputField name="computer.osVersion" label={fa.assets.fields.osVersion} touched={computerTouched.osVersion} error={computerErrors.osVersion} />
@@ -542,7 +617,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                  <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                     {fa.assets.form.monitorDetails}
                                  </h3>
-                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                 <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
                                     <InputField name="monitor.sizeInches" label={fa.assets.fields.sizeInches} type="number" step="any" inputMode="decimal" touched={monitorTouched.sizeInches} error={monitorErrors.sizeInches} />
                                     <SelectField name="monitor.panelType" label={fa.assets.fields.panelType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("PANEL_TYPE", initialValues.monitor.panelType)} touched={monitorTouched.panelType} error={monitorErrors.panelType} />
                                     <SelectField name="monitor.resolution" label={fa.assets.fields.resolution} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("RESOLUTION", initialValues.monitor.resolution)} touched={monitorTouched.resolution} error={monitorErrors.resolution} />
@@ -555,7 +630,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                  <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                     {fa.assets.form.peripheralDetails}
                                  </h3>
-                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                 <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                                     <SelectField name="peripheral.connectionType" label={fa.assets.fields.connectionType} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("CONNECTION_TYPE", initialValues.peripheral.connectionType)} touched={peripheralTouched.connectionType} error={peripheralErrors.connectionType} />
                                     {["PRINTER", "SCANNER", "COPIER"].includes(values.type) ? (
                                        <>
@@ -575,7 +650,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                  <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                     {fa.assets.form.networkDetails}
                                  </h3>
-                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                 <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                                     <InputField name="network.ipAddress" label={fa.assets.fields.ipAddress} dir="ltr" touched={networkTouched.ipAddress} error={networkErrors.ipAddress} />
                                     <InputField name="network.netboxTitle" label={fa.assets.fields.netboxTitle} touched={networkTouched.netboxTitle} error={networkErrors.netboxTitle} />
                                     <InputField name="network.hostname" label={fa.assets.fields.hostname} dir="ltr" touched={networkTouched.hostname} error={networkErrors.hostname} />
@@ -591,7 +666,7 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                  <h3 className="mb-4 text-sm font-extrabold text-brand-700 dark:text-brand-200">
                                     {fa.assets.form.softwareDetails}
                                  </h3>
-                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                 <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
                                     <SelectField name="software.vendor" label={fa.assets.fields.vendor} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SOFTWARE_VENDOR", initialValues.software.vendor)} touched={softwareTouched.vendor} error={softwareErrors.vendor} />
                                     <InputField name="software.version" label={fa.assets.fields.version} dir="ltr" touched={softwareTouched.version} error={softwareErrors.version} />
                                     <SelectField name="software.edition" label={fa.assets.fields.edition} placeholder={fa.assets.form.selectPlaceholder} options={contractOptions("SOFTWARE_EDITION", initialValues.software.edition)} touched={softwareTouched.edition} error={softwareErrors.edition} />
@@ -602,41 +677,37 @@ export default function AssetForm({ mode, asset, options }: AssetFormProps) {
                                  </div>
                               </div>
                            ) : null}
-                        </FormSection>
-                     ) : null}
+                        </div>
+                     ),
+                  })
+               }
 
-                     <FormSection title={fa.assets.form.sectionNotes}>
-                        <TextareaField
-                           name="notes"
-                           label={fa.assets.form.notes}
-                           placeholder={fa.assets.form.notesPlaceholder}
-                           rows={4}
-                           touched={touched.notes}
-                           error={errors.notes}
-                        />
-                     </FormSection>
+               steps.push({
+                  id: "notes",
+                  title: fa.assets.form.sectionNotes,
+                  icon: <PencilSquareIcon className="h-5 w-5" aria-hidden="true" />,
+                  errorKeys: ["notes"],
+                  content: (
+                     <TextareaField
+                        name="notes"
+                        label={fa.assets.form.notes}
+                        placeholder={fa.assets.form.notesPlaceholder}
+                        rows={4}
+                        touched={touched.notes}
+                        error={errors.notes}
+                     />
+                  ),
+               })
 
-                     <div className="flex flex-wrap items-center justify-end gap-3">
-                        <Link
-                           href={asset ? `/admin/assets/${asset.id}` : "/admin/assets"}
-                           className="rounded-full px-5 py-2.5 text-sm font-bold text-navy-600 transition-colors hover:bg-surface-muted dark:text-navy-300 dark:hover:bg-navy-800"
-                        >
-                           {fa.assets.form.cancel}
-                        </Link>
-                        <button
-                           type="submit"
-                           disabled={isSubmitting}
-                           className="inline-flex items-center gap-2 rounded-full bg-linear-to-l from-brand-700 to-brand-800 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-700/25 transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                           <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                           {isSubmitting
-                              ? fa.assets.form.saving
-                              : mode === "create"
-                                ? fa.assets.form.createAction
-                                : fa.assets.form.saveAction}
-                        </button>
-                     </div>
-                  </>
+               return (
+                  <StepForm
+                     steps={steps}
+                     cancelHref={asset ? `/admin/assets/${asset.id}` : "/admin/assets"}
+                     cancelLabel={fa.assets.form.cancel}
+                     submitLabel={mode === "create" ? fa.assets.form.createAction : fa.assets.form.saveAction}
+                     submittingLabel={fa.assets.form.saving}
+                     onSubmitAttempt={() => setValidateAfterSubmit(true)}
+                  />
                )
             }}
          </FormShell>
