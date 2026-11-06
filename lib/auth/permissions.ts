@@ -62,6 +62,7 @@ const MANAGER_ACTIONS = [
    "dashboard.it",
    "reports.read",
    "tickets.delete",
+   "tickets.categories.manage",
    "equipment.delete",
    "activity.read",
 ] as const
@@ -111,6 +112,7 @@ export function can(role: Role | undefined | null, action: Action): boolean {
       case "dashboard.it":
       case "reports.read":
       case "tickets.delete":
+      case "tickets.categories.manage":
       case "equipment.delete":
       case "activity.read":
          return role === ROLES.IT_MANAGER

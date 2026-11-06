@@ -45,26 +45,23 @@ export function panelNavSections(user: SessionUser): NavSection[] {
         },
         {
             kind: "link",
-            href: "/panel/profile",
-            label: fa.nav.profile,
-            icon: "profile",
-        },
-    ]
-
-    // The panel sidebar always opens the personal view. The full inventory
-    // stays in the admin workspace for roles that hold equipment.read.
-    const roadmapItems: NavItem[] = [
-        {
-            kind: "placeholder",
+            href: "/panel/tickets",
             label: fa.nav.tickets,
             icon: "tickets",
-            badge: fa.common.comingSoon,
         },
+        // The panel sidebar always opens the personal view. The full inventory
+        // stays in the admin workspace for roles that hold equipment.read.
         {
             kind: "link",
             href: "/panel/assets",
             label: fa.nav.assets,
             icon: "equipment",
+        },
+        {
+            kind: "link",
+            href: "/panel/profile",
+            label: fa.nav.profile,
+            icon: "profile",
         },
     ]
 
@@ -73,11 +70,6 @@ export function panelNavSections(user: SessionUser): NavSection[] {
             id: "main",
             heading: fa.nav.groupMain,
             items: mainItems,
-        },
-        {
-            id: "roadmap",
-            heading: fa.nav.groupRoadmap,
-            items: roadmapItems,
         },
     ]
 
@@ -125,6 +117,14 @@ export function adminNavSections(user: SessionUser): NavSection[] {
             icon: "equipment",
         })
     }
+    if (can(user.role, "tickets.read.all")) {
+        managementItems.push({
+            kind: "link",
+            href: "/admin/tickets",
+            label: fa.nav.tickets,
+            icon: "tickets",
+        })
+    }
     if (can(user.role, "equipment.options.manage")) {
         managementItems.push({
             kind: "link",
@@ -158,39 +158,25 @@ export function adminNavSections(user: SessionUser): NavSection[] {
         })
     }
 
-    sections.push(
-        {
-            id: "roadmap",
-            heading: fa.nav.groupRoadmap,
-            items: [
-                {
-                    kind: "placeholder",
-                    label: fa.nav.tickets,
-                    icon: "tickets",
-                    badge: fa.common.comingSoon,
-                },
-            ],
-        },
-        {
-            id: "other",
-            heading: fa.nav.groupOther,
-            items: [
-                {
-                    kind: "link",
-                    href: "/panel",
-                    label: fa.nav.panel,
-                    icon: "profile",
-                },
-                {
-                    kind: "link",
-                    href: "/",
-                    label: fa.nav.backToHome,
-                    icon: "home",
-                    exact: true,
-                },
-            ],
-        },
-    )
+    sections.push({
+        id: "other",
+        heading: fa.nav.groupOther,
+        items: [
+            {
+                kind: "link",
+                href: "/panel",
+                label: fa.nav.panel,
+                icon: "profile",
+            },
+            {
+                kind: "link",
+                href: "/",
+                label: fa.nav.backToHome,
+                icon: "home",
+                exact: true,
+            },
+        ],
+    })
 
     return sections
 }

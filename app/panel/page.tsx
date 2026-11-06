@@ -51,9 +51,8 @@ export default async function PanelPage() {
                         icon={<TicketIcon className="h-6 w-6" />}
                         title={fa.panel.sectionTickets}
                         body={fa.panel.sectionTicketsBody}
-                        cta={fa.panel.comingSoon}
-                        disabled
-                        badge={fa.panel.comingSoon}
+                        cta={fa.panel.ticketsCta}
+                        href="/panel/tickets"
                     />
                     <QuickActionTile
                         tone="brand"
